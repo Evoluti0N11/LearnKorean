@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Annyeong Sara! Parla Coreano in 30 Giorni</title>
+  
+  <!-- Google Fonts for Professional Typography (Korean Support) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Leaflet CSS & JS for OpenStreetMap -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <style>
+    :root {
+      --korean-pink: #f472b6; 
+      --korean-blue: #60a5fa; 
+      --hanbok-cream: #fdfbf7;
+    }
+    body { 
+      font-family: 'Nunito', 'Noto Sans KR', sans-serif; 
+      background-color: var(--hanbok-cream);
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='#e2e8f0' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 24px); }
+    .no-select { user-select: none; -webkit-user-select: none; }
+    .hide-scroll::-webkit-scrollbar { display: none; }
+    .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .korean-shadow { box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.08), 0 8px 10px -6px rgba(59, 130, 246, 0.04); }
+    .hangul-watermark {
+      position: absolute;
+      right: -5%;
+      top: -5%;
+      font-size: 140px;
+      color: rgba(0,0,0,0.03);
+      font-weight: 900;
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    
+    @keyframes pop {
+      0% { transform: scale(0.95); opacity: 0; }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop { animation: pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    
+    .chat-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 20px;
+      border-width: 10px 10px 0 0;
+      border-style: solid;
+      border-color: #eff6ff transparent transparent transparent;
+    }
+
+    input[type="text"] { font-size: 16px; } 
+
+    .custom-map-icon { background: transparent; border: none; }
+    .custom-map-icon div { 
+      display: flex; align-items: center; justify-content: center; 
+      width: 44px; height: 44px; background: white; border-radius: 50%; 
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); 
+      border: 3px solid #60a5fa; font-size: 22px; transition: transform 0.2s ease-out;
+    }
+    .custom-map-icon div:hover { transform: scale(1.15) translateY(-5px); cursor: pointer; border-color: #f472b6; }
+    .animate-bounce-slow { animation: bounce 3s infinite; }
+    
+    .leaflet-container { font-family: 'Nunito', sans-serif; z-index: 10; border-radius: 2rem; }
+    .leaflet-popup-content-wrapper { border-radius: 1rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); padding: 5px; }
+    .leaflet-popup-content { margin: 10px 15px; }
+  </style>
+</head>
+<body class="text-slate-800 selection:bg-blue-200">
+
+  <div id="root"></div>
+
+  <script type="module">
+    let db, auth, doc, setDoc, onSnapshot, signOut, signInAnonymously, signInWithCustomToken;
+    let useFirebase = false;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'korean-app-id';
+
+    // --- APPLICATION STATE ---
+    const state = {
+      user: null,
+      profileName: "Sara",
+      isAuthLoading: false,
+      currentView: 'dashboard', 
+      activeDay: 1,
+      completedDays: [],
+      mistakesRecord: {},
+      gameStep: 0,
+      score: 0,
+      selectedAnswer: null,
+      showFeedback: false,
+      isRecording: false,
+      currentMistakes: [],
+      transInput: '',
+      transResult: '',
+      transRomaji: '', 
+      transLoading: false,
+      combo: 0 
+    };
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+
+    let myMap = null;
+
+    // --- DAY 1 TO 5: THE CORE FOUNDATION ---
+    const DETAILED_LESSONS = [
+      {
+        day: 1,
+        title: "I Primi Incontri 👋",
+        topic: "Saluti e Basi",
+        theory: {
+          intro: "Ciao Sara! Iniziamo con le basi. In Corea, i saluti mostrano rispetto. Imparerai a salutare, ringraziare e scusarti come una vera locale.",
+          concept: "Usa sempre il livello formale (che finisce in 'yo' o 'nida') con chi non conosci. Quando saluti o ringrazi, fai un leggero inchino con la testa.",
+          examples: [
+            { hangul: "안녕하세요", romaji: "Annyeonghaseyo", eng: "Ciao / Buongiorno (Formale)", context: "Usalo sempre. ☀️" },
+            { hangul: "감사합니다", romaji: "Gamsahamnida", eng: "Grazie", context: "Molto educato. 🙏" },
+            { hangul: "죄송합니다", romaji: "Joesonghamnida", eng: "Mi scusi / Scusa", context: "Per chiedere scusa. 🙇‍♀️" },
+            { hangul: "안녕히 계세요", romaji: "Annyeonghi gyeseyo", eng: "Arrivederci (a chi resta)", context: "Tu te ne vai, l'altro resta. 🚶‍♀️" },
+            { hangul: "안녕히 가세요", romaji: "Annyeonghi gaseyo", eng: "Arrivederci (a chi va)", context: "L'altro se ne va. 👋" }
+          ],
+          culture: "Fare un piccolo inchino (15 gradi) mentre dici 'Annyeonghaseyo' ti farà fare subito un'ottima impressione!"
+        },
+        exercises: [
+          { type: 'multiple_choice', question: "Entri in una caffetteria a Seul. Cosa dici al barista?", options: ["Joesonghamnida", "Annyeonghaseyo", "Gamsahamnida"], optionsHangul: ["죄송합니다", "안녕하세요", "감사합니다"], answer: 1, conceptTag: "Saluti", feedback_incorrect: "Usa 'Annyeonghaseyo' per salutare le persone!" },
+          { type: 'listen', question: "Ascolta l'audio. Cosa significa?", audioHangul: "감사합니다", options: ["Grazie", "Ciao", "Mi scusi"], answer: 0, conceptTag: "Ascolto", feedback_incorrect: "Quello era 'Gamsahamnida' (Grazie)." },
+          { type: 'speak', question: "Tocca il microfono e dì 'Ciao' in coreano (Formale).", expectedRomaji: ["annyeonghaseyo", "annyeong"], expectedHangul: ["안녕하세요"], conceptTag: "Pronuncia", feedback_incorrect: "Prova a dire 'Annyeonghaseyo'." },
+          { type: 'conversation', context: "Urti per sbaglio una persona in metro.", question: "Cosa le dici subito?", options: ["Annyeonghi gaseyo", "Joesonghamnida", "Annyeonghaseyo"], optionsHangul: ["안녕히 가세요", "죄송합니다", "안녕하세요"], answer: 1, conceptTag: "Scuse", feedback_incorrect: "'Joesonghamnida' è il modo formale per chiedere scusa." },
+          { type: 'multiple_choice', question: "Hai appena pagato in un negozio e stai uscendo. Il commesso resta dentro. Cosa gli dici?", options: ["Annyeonghi gyeseyo", "Annyeonghi gaseyo", "Joesonghamnida"], optionsHangul: ["안녕히 계세요", "안녕히 가세요", "죄송합니다"], answer: 0, conceptTag: "Arrivederci (a chi resta)", feedback_incorrect: "Se l'altro resta, usa 'gyeseyo'." },
+          { type: 'listen', question: "Cosa sta dicendo questa persona che sta uscendo dal tuo appartamento?", audioHangul: "안녕히 계세요", options: ["Arrivederci (a te che resti)", "Grazie", "Arrivederci (a chi va)"], answer: 0, conceptTag: "Ascolto Arrivederci", feedback_incorrect: "Ha detto 'Annyeonghi gyeseyo' perché tu resti in casa." },
+          { type: 'speak', question: "Dì 'Grazie' in modo formale.", expectedRomaji: ["gamsahamnida", "kamsahamnida"], expectedHangul: ["감사합니다"], conceptTag: "Pronuncia", feedback_incorrect: "Pronuncia: Gam-sa-ham-ni-da." },
+          { type: 'speak', question: "Dì 'Mi scusi'.", expectedRomaji: ["joesonghamnida", "choesonghamnida"], expectedHangul: ["죄송합니다"], conceptTag: "Fluidità", feedback_incorrect: "Joesonghamnida!" }
+        ]
+      },
+      {
+        day: 2,
+        title: "Piacere, sono Sara! 🗣️",
+        topic: "Presentazioni",
+        theory: {
+          intro: "Oggi impariamo a presentarti. Imparerai a dire il tuo nome, la tua nazionalità e la frase magica per fare amicizia.",
+          concept: "La particella '이에요 / 예요' (ieyo / yeyo) funziona come 'essere'. Si attacca alla fine della parola. (yeyo se finisce per vocale, ieyo se consonante).",
+          examples: [
+            { hangul: "저는 사라예요", romaji: "Jeoneun Sara-yeyo", eng: "Io sono Sara.", context: "La tua frase chiave! ✨" },
+            { hangul: "이탈리아 사람이에요", romaji: "Itallia saram-ieyo", eng: "Sono italiana.", context: "Itallia + saram (persona). 🇮🇹" },
+            { hangul: "이름이 뭐예요?", romaji: "Ireum-i mwoyeyo?", eng: "Come ti chiami?", context: "Per chiedere il nome a qualcuno. 🏷️" },
+            { hangul: "반갑습니다", romaji: "Bangapseumnida", eng: "Piacere di conoscerti.", context: "Sempre alla fine di una presentazione! 🤝" }
+          ],
+          culture: "Non usare MAI 'Tu' (Dangsin) in coreano. Chiama le persone per nome o per titolo. Chiedere l'età è normalissimo in Corea per stabilire il rispetto!"
+        },
+        exercises: [
+          { type: 'multiple_choice', question: "Come dici 'Io sono Sara'?", options: ["Sara jeoneun-ieyo", "Jeoneun Sara-yeyo", "Yeyo Sara jeoneun"], optionsHangul: ["사라 저는이에요", "저는 사라예요", "예요 사라 저는"], answer: 1, conceptTag: "Struttura frase", feedback_incorrect: "La struttura è: [Jeoneun] + [Nome] + yeyo." },
+          { type: 'speak', question: "Pronuncia: 'Io sono Sara.'", expectedRomaji: ["jeoneun sarayeyo", "sarayeyo"], expectedHangul: ["저는 사라예요", "사라예요"], conceptTag: "Pronuncia", feedback_incorrect: "Dì 'Jeoneun Sara-yeyo'." },
+          { type: 'conversation', context: "🧑 Ragazzo: Ireum-i mwoyeyo? (Come ti chiami?)", question: "Come rispondi educatamente?", options: ["Bangapseumnida", "Itallia saram-ieyo", "Jeoneun Sara-yeyo"], optionsHangul: ["반갑습니다", "이탈리아 사람이에요", "저는 사라예요"], answer: 2, conceptTag: "Risposta intro", feedback_incorrect: "Ti ha chiesto il nome!" },
+          { type: 'listen', question: "Ascolta questa frase essenziale:", audioHangul: "반갑습니다", options: ["Grazie", "Piacere di conoscerti", "Sono italiana"], answer: 1, conceptTag: "Ascolto", feedback_incorrect: "Quello era 'Bangapseumnida' (Piacere)." },
+          { type: 'speak', question: "Dì 'Piacere di conoscerti'.", expectedRomaji: ["bangapseumnida", "pangapseumnida"], expectedHangul: ["반갑습니다"], conceptTag: "Pronuncia", feedback_incorrect: "Ban-gap-seum-ni-da." },
+          { type: 'multiple_choice', question: "Come chiedi a qualcuno 'Come ti chiami?'", options: ["Ireum-i mwoyeyo?", "Saram-ieyo?", "Sara-yeyo?"], optionsHangul: ["이름이 뭐예요?", "사람이에요?", "사라예요?"], answer: 0, conceptTag: "Domande", feedback_incorrect: "Usa 'Ireum-i mwoyeyo?'" },
+          { type: 'speak', question: "Dì 'Sono italiana' (Itallia saram-ieyo)", expectedRomaji: ["itallia saramieyo", "italliasaramieyo"], expectedHangul: ["이탈리아 사람이에요"], conceptTag: "Parlato", feedback_incorrect: "I-tal-li-a sa-ram-i-e-yo." },
+          { type: 'conversation', context: "Incontri una persona a un Language Exchange.", question: "Qual è la sequenza perfetta per presentarti?", options: ["Gamsahamnida. Sara-yeyo.", "Jeoneun Sara-yeyo. Bangapseumnida.", "Itallia saram-ieyo. Joesonghamnida."], optionsHangul: ["감사합니다. 사라예요.", "저는 사라예요. 반갑습니다.", "이탈리아 사람이에요. 죄송합니다."], answer: 1, conceptTag: "Intro completa", feedback_incorrect: "Nome + Piacere di conoscerti." }
+        ]
+      },
+      {
+        day: 3,
+        title: "Dov'è il bagno?! 📍",
+        topic: "Direzioni",
+        theory: {
+          intro: "Sara, sei a Hongdae e ti sei persa. Oggi impariamo a chiedere dove si trovano i posti chiave.",
+          concept: "Formula magica: [Luogo] + 이/가 어디예요? (i/ga eodiyeyo?).",
+          examples: [
+            { hangul: "화장실이 어디예요?", romaji: "Hwajangsil-i eodiyeyo?", eng: "Dov'è il bagno?", context: "Hwajangsil = Bagno 🚽" },
+            { hangul: "역이 어디예요?", romaji: "Yeok-i eodiyeyo?", eng: "Dov'è la stazione?", context: "Yeok = Stazione 🚉" },
+            { hangul: "편의점", romaji: "Pyeonuijeom", eng: "Convenience store", context: "Il minimarket aperto 24/7. 🏪" },
+            { hangul: "직진 / 오른쪽 / 왼쪽", romaji: "Jikjin / Oreunjjok / Oenjjok", eng: "Dritto / Destra / Sinistra", context: "Per capire la risposta. ➡️" }
+          ],
+          culture: "In Corea, i bagni pubblici sono pulitissimi e gratuiti, spesso situati dentro le stazioni della metro."
+        },
+        exercises: [
+          { type: 'listen', question: "Cosa sta cercando questa persona?", audioHangul: "역이 어디예요?", options: ["Il bagno", "La stazione", "Un ristorante"], answer: 1, conceptTag: "Ascolto", feedback_incorrect: "Ascolta 'Yeok' (Stazione)." },
+          { type: 'speak', question: "Chiedi l'essenziale: 'Dov'è il bagno?'", expectedRomaji: ["hwajangsili eodiyeyo", "hwajangsilieodiyeyo"], expectedHangul: ["화장실이 어디예요", "화장실이어디예요"], conceptTag: "Sopravvivenza", feedback_incorrect: "Dì: 'Hwajangsil-i eodiyeyo?'" },
+          { type: 'multiple_choice', question: "Come chiedi 'Dov'è il minimarket?'", options: ["Eodiyeyo pyeonuijeom-i?", "Pyeonuijeom-i eodiyeyo?", "Pyeonuijeom-i hwajangsil?"], optionsHangul: ["어디예요 편의점이?", "편의점이 어디예요?", "편의점이 화장실?"], answer: 1, conceptTag: "Struttura", feedback_incorrect: "Luogo + eodiyeyo." },
+          { type: 'conversation', context: "👮 Poliziotto: Jikjin-ieyo. (È dritto.)", question: "In che direzione devi andare?", options: ["Destra", "Sinistra", "Dritto"], optionsHangul: ["오른쪽", "왼쪽", "직진"], answer: 2, conceptTag: "Direzioni", feedback_incorrect: "Jikjin significa dritto." },
+          { type: 'speak', question: "Chiedi: 'Dov'è la stazione?' (Yeok)", expectedRomaji: ["yeoki eodiyeyo", "yeogieodiyeyo"], expectedHangul: ["역이 어디예요"], conceptTag: "Parlato", feedback_incorrect: "Dì 'Yeok-i eodiyeyo?'" },
+          { type: 'multiple_choice', question: "Quale parola significa 'Destra'?", options: ["Oenjjok", "Oreunjjok", "Jikjin"], optionsHangul: ["왼쪽", "오른쪽", "직진"], answer: 1, conceptTag: "Direzioni", feedback_incorrect: "Oreunjjok = Destra." },
+          { type: 'listen', question: "Ascolta la direzione:", audioHangul: "왼쪽", options: ["Destra", "Sinistra", "Dritto"], answer: 1, conceptTag: "Ascolto", feedback_incorrect: "Oenjjok significa Sinistra." },
+          { type: 'speak', question: "Dì 'Minimarket' (Pyeonuijeom)", expectedRomaji: ["pyeonuijeom"], expectedHangul: ["편의점"], conceptTag: "Vocabolario", feedback_incorrect: "Pyeon-ui-jeom." }
+        ]
+      },
+      {
+        day: 4,
+        title: "Kit di Sopravvivenza 🆘",
+        topic: "Comprensione",
+        theory: {
+          intro: "I coreani parlano veloci. Oggi impariamo cosa dire quando non capisci o quando vuoi rifiutare gentilmente qualcosa.",
+          concept: "Usa 'Mollayo' per dire 'non lo so'. La parola 'Gwaenchanayo' (va bene/sto bene) è magica per rifiutare un'offerta o rassicurare qualcuno.",
+          examples: [
+            { hangul: "네 / 아니요", romaji: "Ne / Aniyo", eng: "Sì / No", context: "Le basi. ⭕ ❌" },
+            { hangul: "괜찮아요", romaji: "Gwaenchanayo", eng: "Sto bene / Non grazie / Nessun problema", context: "Parola multiuso! ✋" },
+            { hangul: "몰라요", romaji: "Mollayo", eng: "Non lo so / Non capisco", context: "Quando non sai rispondere. 🤷‍♀️" },
+            { hangul: "천천히 말해 주세요", romaji: "Cheoncheonhi malhae juseyo", eng: "Parla più piano, per favore.", context: "Salvavita. 🐢" },
+            { hangul: "한국어 잘 못해요", hangul: "한국어 잘 못해요", romaji: "Hangugeo jal mothaeyo", eng: "Non parlo bene il coreano.", context: "Abbassare le aspettative! 😅" }
+          ],
+          culture: "Invece di un 'NO' diretto, i coreani spesso dicono 'Gwaenchanayo' (Sto bene così) per rifiutare una busta al supermercato o del cibo extra."
+        },
+        exercises: [
+          { type: 'conversation', context: "🏪 Cassiere: 봉투 필요하세요? (Vuole una busta?)", question: "Come dici 'Sto bene così / No grazie'?", options: ["Ne", "Gwaenchanayo", "Mollayo"], optionsHangul: ["네", "괜찮아요", "몰라요"], answer: 1, conceptTag: "Rifiutare", feedback_incorrect: "'Gwaenchanayo' è il modo educato per rifiutare." },
+          { type: 'speak', question: "Dì 'Sì'.", expectedRomaji: ["ne"], expectedHangul: ["네"], conceptTag: "Pronuncia", feedback_incorrect: "Semplicemente 'Ne'." },
+          { type: 'multiple_choice', question: "Un anziano in metro ti fa un discorso infinito. Tu non capisci una parola. Cosa dici?", options: ["Ne", "Mollayo", "Gamsahamnida"], optionsHangul: ["네", "몰라요", "감사합니다"], answer: 1, conceptTag: "Sopravvivenza", feedback_incorrect: "'Mollayo' significa 'Non lo so / Non capisco'." },
+          { type: 'listen', question: "Cosa ti sta dicendo questa persona?", audioHangul: "천천히 말해 주세요", options: ["Vuoi l'acqua?", "Parla più piano, per favore.", "Dov'è la stazione?"], answer: 1, conceptTag: "Ascolto", feedback_incorrect: "Cheoncheonhi = lentamente." },
+          { type: 'speak', question: "Chiedi: 'Parla più piano, per favore.'", expectedRomaji: ["cheoncheonhi malhae juseyo", "cheoncheonhi"], expectedHangul: ["천천히 말해 주세요", "천천히 말해주세요"], conceptTag: "Parlato", feedback_incorrect: "Cheon-cheon-hi mal-hae ju-se-yo." },
+          { type: 'conversation', context: "🧑 Coreano: 블라블라블라 (Parla velocissimo)", question: "Vuoi dirgli: 'Non parlo bene il coreano'. Cosa scegli?", options: ["Hwajangsil-i eodiyeyo?", "Hangugeo jal mothaeyo", "Gwaenchanayo"], optionsHangul: ["화장실이 어디예요?", "한국어 잘 못해요", "괜찮아요"], answer: 1, conceptTag: "Scusarsi per la lingua", feedback_incorrect: "Hangugeo = Coreano. jal mothaeyo = non so fare bene." },
+          { type: 'multiple_choice', question: "Come si dice 'No' in coreano?", options: ["Ne", "Aniyo", "Gwaenchanayo"], optionsHangul: ["네", "아니요", "괜찮아요"], answer: 1, conceptTag: "Basi", feedback_incorrect: "Aniyo = No." },
+          { type: 'listen', question: "Ascolta. Cosa significa?", audioHangul: "괜찮아요", options: ["Mi scusi", "Non lo so", "Va bene / Non grazie / Nessun problema"], answer: 2, conceptTag: "Ascolto", feedback_incorrect: "Gwaenchanayo!" }
+        ]
+      },
+      {
+        day: 5,
+        title: "Al Ristorante! 🌶️",
+        topic: "Ristoranti",
+        theory: {
+          intro: "La parte migliore della Corea: IL CIBO! Dal barbecue coreano al cibo di strada. Impariamo a ordinare e a gestire le ordinazioni.",
+          concept: "La parola d'oro è '주세요' (Juseyo), che significa 'per favore dammi'. Indica l'immagine nel menù e di' 'Igeo juseyo'.",
+          examples: [
+            { hangul: "이거 주세요", romaji: "Igeo juseyo", eng: "Questo, per favore.", context: "Indica e parla. 👈" },
+            { hangul: "물 좀 주세요", romaji: "Mul jom juseyo", eng: "Un po' d'acqua, per favore.", context: "Mul = Acqua. 💧" },
+            { hangul: "얼마예요?", romaji: "Eolmayeyo?", eng: "Quanto costa?", context: "Per lo street food e i mercati. 💸" },
+            { hangul: "맛있어요", romaji: "Masisseoyo", eng: "È delizioso!", context: "Fai felici le signore del ristorante. 😋" },
+            { hangul: "안 맵게 해주세요", romaji: "An maepge haejuseyo", eng: "Non lo faccia piccante, per favore.", context: "FONDAMENTALE in Corea! 🚫🌶️" },
+            { hangul: "계산서 주세요", romaji: "Gyesanseo juseyo", eng: "Il conto, per favore.", context: "Anche se spesso paghi alla cassa alzandoti. 🧾" }
+          ],
+          culture: "In Corea NON si lascia la mancia. Spesso trovi un campanello sul tavolo per chiamare il cameriere: suonalo senza paura e dì 'Jeogiyo!' (Mi scusi!)."
+        },
+        exercises: [
+          { type: 'multiple_choice', question: "Come chiedi 'Quanto costa?' per un Tteokbokki in strada?", options: ["Igeo juseyo?", "Eolmayeyo?", "Masisseoyo?"], optionsHangul: ["이거 주세요?", "얼마예요?", "맛있어요?"], answer: 1, conceptTag: "Shopping/Cibo", feedback_incorrect: "'Eolmayeyo' serve per chiedere il prezzo." },
+          { type: 'conversation', context: "Guardi il menu al ristorante. Indichi la foto di una zuppa.", question: "Cosa dici al cameriere?", options: ["Igeo juseyo", "Eolmayeyo", "Mollayo"], optionsHangul: ["이거 주세요", "얼마예요", "몰라요"], answer: 0, conceptTag: "Ordinare", feedback_incorrect: "'Igeo juseyo' significa 'Questo, per favore'." },
+          { type: 'listen', question: "Hai appena assaggiato il pollo fritto coreano. Esclami:", audioHangul: "맛있어요", options: ["Quanto costa?", "Non piccante", "È delizioso!"], answer: 2, conceptTag: "Ascolto", feedback_incorrect: "Ha detto 'Masisseoyo!' (È delizioso)." },
+          { type: 'speak', question: "Indica un piatto e dì 'Questo per favore.'", expectedRomaji: ["igeo juseyo", "igeojuseyo"], expectedHangul: ["이거 주세요"], conceptTag: "Ordinare", feedback_incorrect: "Dì 'Igeo juseyo'." },
+          { type: 'multiple_choice', question: "Non tolleri il piccante. Vuoi assicurarti di sopravvivere al pasto. Cosa chiedi?", options: ["Gyesanseo juseyo", "An maepge haejuseyo", "Masisseoyo"], optionsHangul: ["계산서 주세요", "안 맵게 해주세요", "맛있어요"], answer: 1, conceptTag: "Sopravvivenza cibo", feedback_incorrect: "'An maepge haejuseyo' significa 'Lo faccia non piccante'." },
+          { type: 'speak', question: "Dì ad alta voce 'È delizioso!'", expectedRomaji: ["masisseoyo", "mashissoyo"], expectedHangul: ["맛있어요"], conceptTag: "Pronuncia", feedback_incorrect: "Dì 'Ma-si-sseo-yo'." },
+          { type: 'conversation', context: "Il tuo bicchiere è vuoto e hai mangiato qualcosa di piccantissimo.", question: "Come chiedi l'acqua?", options: ["Mul jom juseyo", "Yeok-i eodiyeyo?", "Gwaenchanayo"], optionsHangul: ["물 좀 주세요", "역이 어디예요?", "괜찮아요"], answer: 0, conceptTag: "Acqua", feedback_incorrect: "Mul = Acqua. Jom juseyo = Per favore danne un po'." },
+          { type: 'speak', question: "Chiedi il conto: 'Il conto, per favore.'", expectedRomaji: ["gyesanseo juseyo", "gyesanseojuseyo"], expectedHangul: ["계산서 주세요"], conceptTag: "Ristorante", feedback_incorrect: "Gye-san-seo ju-se-yo." },
+          { type: 'multiple_choice', question: "Hai mangiato benissimo. Devi lasciare la mancia?", options: ["Sì, 10%", "No, in Corea non c'è l'usanza"], optionsHangul: ["", ""], answer: 1, conceptTag: "Cultura", feedback_incorrect: "Niente mancia in Corea! Paghi solo il prezzo del menù." }
+        ]
+      }
+    ];
+
+    // --- PROCEDURAL GENERATOR FOR DAYS 6-30 ---
+    // Expanded to 25 unique daily conversational themes for restaurant, shopping, and small talk.
+    const ADVANCED_TOPICS = [
+      { name: "Caffetteria", hangul: "아이스 아메리카노 한 잔 주세요", romaji: "Aiseu amerikano han jan juseyo", eng: "Un Iced Americano, per favore", scenario: "Sei da Starbucks a Gangnam.", clue: "한 잔 (han jan) = una tazza/bicchiere" },
+      { name: "Wi-Fi", hangul: "와이파이 비밀번호가 뭐예요?", romaji: "Waipai bimilbeonhoga mwoyeyo?", eng: "Qual è la password del Wi-Fi?", scenario: "Ti sei seduta in un bar e devi usare internet.", clue: "비밀번호 (bimilbeonho) = password" },
+      { name: "Taxi", hangul: "서울역으로 가주세요", romaji: "Seoul-yeok-euro gajuseyo", eng: "A Seoul Station, per favore", scenario: "Sali sul taxi per prendere il treno.", clue: "으로 가주세요 (euro gajuseyo) = vada verso..." },
+      { name: "Shopping", hangul: "이거 입어봐도 돼요?", romaji: "Igeo ibeobwado dwaeyo?", eng: "Posso provarlo?", scenario: "Vedi un bel cappotto a Dongdaemun.", clue: "입어보다 (ibeoboda) = provare un vestito" },
+      { name: "Taglie", hangul: "더 큰 사이즈 있어요?", romaji: "Deo keun saijeu isseoyo?", eng: "C'è una taglia più grande?", scenario: "Il vestito è troppo stretto.", clue: "더 큰 (deo keun) = più grande" },
+      { name: "Chiedere Sconti", hangul: "조금만 깎아주세요~", romaji: "Jogeumman kkakajuseyo~", eng: "Fammi un piccolo sconto~", scenario: "Tratti il prezzo in un mercato tradizionale.", clue: "깎다 (kkakta) = tagliare il prezzo" },
+      { name: "Allergie", hangul: "땅콩 알레르기가 있어요", romaji: "Ttangkong allereugiga isseoyo", eng: "Ho un'allergia alle arachidi", scenario: "Spieghi al cameriere che non puoi mangiare certe cose.", clue: "알레르기 (allereugi) = allergia" },
+      { name: "K-BBQ 1", hangul: "삼겹살 이 인분 주세요", romaji: "Samgyeopsal i inbun juseyo", eng: "Due porzioni di pancetta, per favore", scenario: "Ordini al ristorante barbecue.", clue: "인분 (inbun) = porzione (per persona)" },
+      { name: "K-BBQ 2", hangul: "불판 좀 갈아주세요", romaji: "Bulpan jom garajuseyo", eng: "Può cambiare la griglia, per favore?", scenario: "La griglia della carne si sta bruciando.", clue: "갈다 (galda) = cambiare/sostituire" },
+      { name: "Chiedere l'Età", hangul: "몇 살이에요?", romaji: "Myeot sarieyo?", eng: "Quanti anni hai?", scenario: "Un nuovo amico coreano vuole sapere la tua età per usare la formalità corretta.", clue: "살 (sal) = anni d'età" },
+      { name: "Hobby", hangul: "취미가 뭐예요?", romaji: "Chwimiga mwoyeyo?", eng: "Qual è il tuo hobby?", scenario: "Stai facendo conversazione a un language exchange.", clue: "취미 (chwimi) = hobby" },
+      { name: "Meteo", hangul: "오늘 날씨가 정말 좋네요", romaji: "Oneul nalssiga jeongmal jonneyo", eng: "Il tempo è davvero bello oggi", scenario: "Fai small-talk aspettando l'autobus.", clue: "날씨 (nalssi) = meteo" },
+      { name: "Stanchezza", hangul: "너무 피곤해요", romaji: "Neomu pigonhaeyo", eng: "Sono troppo stanca", scenario: "Hai camminato tutto il giorno a Seul.", clue: "피곤하다 (pigonhada) = essere stanco" },
+      { name: "Farmacia", hangul: "머리가 아파요", romaji: "Meoriga apayo", eng: "Ho mal di testa", scenario: "Vai in farmacia (Yakguk) a chiedere una medicina.", clue: "아파요 (apayo) = fa male" },
+      { name: "Metropolitana", hangul: "다음 역은 어디예요?", romaji: "Daeum yeogeun eodiyeyo?", eng: "Qual è la prossima stazione?", scenario: "Sei sul treno e non hai capito l'annuncio.", clue: "다음 (daeum) = prossimo" },
+      { name: "Bus", hangul: "이 버스 강남 가요?", romaji: "I beoseu Gangnam gayo?", eng: "Questo bus va a Gangnam?", scenario: "Chiedi all'autista prima di salire.", clue: "가요? (gayo?) = va?" },
+      { name: "Foto", hangul: "사진 좀 찍어주시겠어요?", romaji: "Sajin jom jjigeojusigesseoyo?", eng: "Potrebbe scattarmi una foto?", scenario: "Sei davanti al palazzo Gyeongbokgung.", clue: "사진 (sajin) = foto" },
+      { name: "Complimenti", hangul: "한국어 정말 잘하시네요!", romaji: "Hangugeo jeongmal jalhasineyo!", eng: "Parli davvero bene il coreano!", scenario: "Un coreano è sorpreso dal tuo livello.", clue: "잘하다 (jalhada) = fare bene" },
+      { name: "Modestia", hangul: "아니에요, 아직 멀었어요", romaji: "Anieyo, ajik meoreosseoyo", eng: "No, ho ancora molto da imparare", scenario: "Rispondi umilmente al complimento sul tuo coreano.", clue: "아직 (ajik) = ancora" },
+      { name: "Bagno Pubblico", hangul: "여기에 휴지 있어요?", romaji: "Yeogie hyuji isseoyo?", eng: "C'è della carta igienica qui?", scenario: "Prima di entrare nel bagno della metro.", clue: "휴지 (hyuji) = carta igienica / fazzoletti" },
+      { name: "Inviti", hangul: "언제 밥 한번 먹자!", romaji: "Eonje bap hanbeon meokja!", eng: "Mangiamo insieme qualche volta! (Informale)", scenario: "Saluti un amico coreano. Spesso è solo un modo di dire!", clue: "밥 (bap) = riso / pasto" },
+      { name: "Brindisi", hangul: "건배!", romaji: "Geonbae!", eng: "Salute! / Brindisi!", scenario: "State bevendo Soju insieme.", clue: "건배 (geonbae) = brindisi (vuotare il bicchiere)" },
+      { name: "Telefono", hangul: "여보세요?", romaji: "Yeoboseyo?", eng: "Pronto?", scenario: "Rispondi a una chiamata sul telefono.", clue: "Usato solo al telefono." },
+      { name: "Scuse Profonde", hangul: "제 잘못입니다", romaji: "Je jalmosimnida", eng: "È colpa mia", scenario: "Hai commesso un errore serio sul lavoro in Corea.", clue: "잘못 (jalmot) = errore / colpa" },
+      { name: "Amici", hangul: "나중에 봐요!", romaji: "Najunge bwayo!", eng: "Ci vediamo dopo!", scenario: "Saluti un tuo coetaneo.", clue: "나중에 (najunge) = più tardi" }
+    ];
+
+    const generateFullMonth = () => {
+      const fullCourse = [...DETAILED_LESSONS];
+      
+      for (let i = 6; i <= 30; i++) {
+        // Assign one of the 25 topics to each day (i-6 is 0 to 24)
+        const t = ADVANCED_TOPICS[i - 6];
+        
+        let dailyExercises = [];
+
+        // 1. Translation / Meaning (Input)
+        dailyExercises.push({
+          type: 'multiple_choice',
+          question: `Situazione: ${t.scenario}. Cosa significa "${t.romaji}"?`,
+          options: [t.eng, "Non capisco", "Dov'è il bagno?"],
+          optionsHangul: [t.hangul, "몰라요", "화장실이 어디예요"],
+          answer: 0,
+          conceptTag: "Vocabolario Nuovo"
+        });
+
+        // 2. Listening Focus
+        dailyExercises.push({
+          type: 'listen',
+          question: "Ascolta questa espressione utilissima. Cerca di memorizzare il suono.",
+          audioHangul: t.hangul,
+          options: [t.eng, "Sono italiana", "Quanto costa?"],
+          answer: 0,
+          conceptTag: "Ascolto Nuovo"
+        });
+
+        // 3. Pronunciation Practice
+        dailyExercises.push({
+          type: 'speak',
+          question: `Pronuncia: Dì '${t.eng}' in Coreano.`,
+          expectedRomaji: [t.romaji.toLowerCase().replace(/[^a-z]/g, '')],
+          expectedHangul: [t.hangul],
+          conceptTag: "Pronuncia",
+          feedback_incorrect: `Prova a dire '${t.romaji}' ad alta voce in modo chiaro.`
+        });
+
+        // 4. Conversation Application
+        dailyExercises.push({
+          type: 'conversation',
+          context: `Ricorda la parola chiave: ${t.clue}`,
+          question: `Nello scenario "${t.name}", qual è la frase giusta da usare?`,
+          options: [t.romaji, "Igeo juseyo", "Annyeonghaseyo"],
+          optionsHangul: [t.hangul, "이거 주세요", "안녕하세요"],
+          answer: 0,
+          conceptTag: "Scenari Reali"
+        });
+
+        // 5 & 6. SPACED REPETITION (Review random previous days)
+        // Pick 2 random exercises from Day 1 to i-1 to ensure they don't forget the basics!
+        for(let r=0; r<2; r++) {
+            const randomDayNum = Math.floor(Math.random() * (i - 1)) + 1; // 1 to i-1
+            const pastDay = fullCourse.find(d => d.day === randomDayNum);
+            // Get a multiple choice or listen exercise from that day to review
+            const reviewExs = pastDay.exercises.filter(ex => ex.type === 'multiple_choice' || ex.type === 'listen');
+            const randomEx = reviewExs[Math.floor(Math.random() * reviewExs.length)];
+            
+            // Deep clone the exercise so we don't modify the original
+            let reviewExercise = JSON.parse(JSON.stringify(randomEx));
+            reviewExercise.question = `[Ripasso Giorno ${randomDayNum}] ` + reviewExercise.question;
+            reviewExercise.conceptTag = "Ripasso Spaziato";
+            dailyExercises.push(reviewExercise);
+        }
+
+        fullCourse.push({
+          day: i,
+          title: `Giorno ${i}: ${t.name}`,
+          topic: "Conversazione",
+          theory: {
+            intro: `Benvenuta al Giorno ${i}, Sara! Oggi impariamo a gestire la situazione: "${t.name}".`,
+            concept: `Ripeti la frase principale almeno tre volte ad alta voce prima di iniziare i quiz. Alla fine dei quiz di oggi, troverai anche degli esercizi di ripasso a sorpresa!`,
+            examples: [{ hangul: t.hangul, romaji: t.romaji, eng: t.eng, context: "Frase Focus del Giorno ✨" }],
+            culture: t.clue
+          },
+          exercises: dailyExercises
+        });
+      }
+      return fullCourse;
+    };
+
+    const COURSE_DATA = generateFullMonth();
+
+    const LIBRARY_DATA = [
+      {
+        category: "Emergenze & Sopravvivenza",
+        icon: "alert-circle", iconColor: "text-red-500",
+        items: [
+          { hangul: "몰라요", romaji: "Mollayo", eng: "Non lo so / Non capisco", context: "Molto informale, ma utile per tirarsi fuori d'impiccio se ti parlano troppo." },
+          { hangul: "괜찮아요", romaji: "Gwaenchanayo", eng: "Va bene / Sto bene", context: "Perfetto per dire 'No grazie' o 'Nessun problema'." },
+          { hangul: "한국어 잘 못해요", romaji: "Hangugeo jal mothaeyo", eng: "Non parlo bene il coreano", context: "Usalo per chiedere clemenza quando i locali parlano a raffica." },
+          { hangul: "도와주세요", romaji: "Dowajuseyo", eng: "Aiutatemi / Per favore aiutami", context: "Se ti sei persa o hai un'emergenza vera e propria." }
+        ]
+      },
+      {
+        category: "Ristorante & Cibo",
+        icon: "utensils", iconColor: "text-orange-500",
+        items: [
+          { hangul: "저기요!", romaji: "Jeogiyo!", eng: "Scusi! (Per chiamare il cameriere)", context: "Alza la mano o premi il pulsante al tavolo e grida questo." },
+          { hangul: "이거 주세요", romaji: "Igeo juseyo", eng: "Questo, per favore.", context: "Indica la foto nel menu." },
+          { hangul: "안 맵게 해주세요", romaji: "An maepge haejuseyo", eng: "Non piccante, per favore", context: "Per salvarti lo stomaco. Se lo vuoi un po' piccante: 'Deol maepge haejuseyo'." },
+          { hangul: "물 좀 주세요", romaji: "Mul jom juseyo", eng: "Acqua, per favore", context: "A volte il distributore d'acqua è self-service (scritto 'Self')." }
+        ]
+      },
+      {
+        category: "Shopping & K-Beauty",
+        icon: "shopping-bag", iconColor: "text-pink-500",
+        items: [
+          { hangul: "얼마예요?", romaji: "Eolmayeyo?", eng: "Quanto costa?", context: "La prima frase da sapere in un mercato, a Dongdaemun o da Olive Young." },
+          { hangul: "조금만 깎아주세요", romaji: "Jogeumman kkakajuseyo", eng: "Fammi un po' di sconto", context: "Da usare solo nei mercati tradizionali, non nei negozi con prezzi fissi!" },
+          { hangul: "카드 돼요?", romaji: "Kadeu dwaeyo?", eng: "Posso pagare con carta?", context: "In Corea la carta è accettata quasi ovunque (anche per 1 euro)." }
+        ]
+      },
+      {
+        category: "Reazioni da K-Drama",
+        icon: "smile", iconColor: "text-green-500",
+        items: [
+          { hangul: "진짜요?", romaji: "Jinjjayo?", eng: "Davvero?!", context: "La reazione standard per dimostrare che stai ascoltando (Reacting è fondamentale in Corea)." },
+          { hangul: "대박!", romaji: "Daebak!", eng: "Incredibile! / Fantastico!", context: "Parola gergale. Se il cibo è pazzesco o vedi qualcosa di assurdo." },
+          { hangul: "귀여워요!", romaji: "Gwiyeowoyo!", eng: "Che carino!", context: "Da usare quando vedi cuccioli, vestiti carini o idoli K-pop." }
+        ]
+      }
+    ];
+
+    const MAP_REGIONS = [
+      { name: "Seoul (서울)", icon: "🏙️", emoji: "🥢", desc: "La capitale frenetica. Palazzi reali, K-pop, shopping e vita notturna a Hongdae e Gangnam.", keywords: ["K-Pop", "Gyeongbokgung", "Caffè"], lat: 37.5665, lng: 126.9780 },
+      { name: "Busan (부산)", icon: "🌊", emoji: "🏖️", desc: "La città costiera. Famosa per le spiagge di Haeundae, il mercato del pesce e il loro dialetto vivace (Satoori).", keywords: ["Spiaggia", "Pesce", "Satoori"], lat: 35.1796, lng: 129.0756 },
+      { name: "Jeju-do (제주도)", icon: "🌋", emoji: "🍊", desc: "Le 'Hawaii coreane'. Famosa per i mandarini, i paesaggi vulcanici (Hallasan) e le statue Harubang.", keywords: ["Mandarini", "Natura", "Vento"], lat: 33.4996, lng: 126.5312 },
+      { name: "Jeonju (전주)", icon: "🏯", emoji: "🥣", desc: "La capitale gastronomica. È il luogo di nascita del Bibimbap e ha un bellissimo villaggio Hanok tradizionale.", keywords: ["Bibimbap", "Hanok", "Storia"], lat: 35.8242, lng: 127.1480 },
+      { name: "Gyeongju (경주)", icon: "🏺", emoji: "🌸", desc: "Il museo senza muri. L'antica capitale del regno di Silla, piena di templi e tombe reali.", keywords: ["Tempio", "Silla", "Storia"], lat: 35.8562, lng: 129.2247 }
+    ];
+
+    // --- LOGIC & LOCAL SAVE ---
+    const loadLocalProgress = () => {
+      try {
+        const saved = localStorage.getItem('sara_korean_save');
+        if (saved) {
+          const data = JSON.parse(saved);
+          state.completedDays = data.completedDays || [];
+          state.mistakesRecord = data.mistakesRecord || {};
+          if (data.profileName) state.profileName = data.profileName;
+        }
+      } catch(e) { console.error("Local storage error", e); }
+    };
+
+    const showSaveToast = () => {
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-5 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-6 py-3 rounded-full shadow-2xl z-[100] transition-all duration-300 text-sm font-bold flex items-center gap-2 animate-pop border border-blue-400';
+      toast.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-white"></i> Progressi Salvati`;
+      document.body.appendChild(toast);
+      lucide.createIcons();
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translate(-50%, -20px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 2000);
+    };
+
+    const initApp = async () => {
+      try {
+        const configStr = typeof window.__firebase_config !== 'undefined' ? window.__firebase_config : null;
+        if (configStr) {
+          const config = JSON.parse(configStr);
+          if (Object.keys(config).length > 0) {
+            useFirebase = true;
+            const appMod = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+            const authMod = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+            const fsMod = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+
+            const appInstance = appMod.initializeApp(config);
+            auth = authMod.getAuth(appInstance);
+            db = fsMod.getFirestore(appInstance);
+
+            doc = fsMod.doc; setDoc = fsMod.setDoc; onSnapshot = fsMod.onSnapshot;
+            signOut = authMod.signOut; signInAnonymously = authMod.signInAnonymously; signInWithCustomToken = authMod.signInWithCustomToken;
+
+            authMod.onAuthStateChanged(auth, (currentUser) => {
+              state.user = currentUser;
+              state.isAuthLoading = false;
+              renderApp();
+              if (currentUser) {
+                const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'data');
+                onSnapshot(userDocRef, (docSnap) => {
+                  if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    state.completedDays = data.completedDays || [];
+                    state.mistakesRecord = data.mistakesRecord || {};
+                    if (data.profileName) state.profileName = data.profileName;
+                    if(state.currentView !== 'game') renderApp();
+                  }
+                }, (err) => console.error(err));
+              }
+            });
+
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+              await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+              await signInAnonymously(auth);
+            }
+            return;
+          }
+        }
+      } catch(e) {
+        console.warn("Cloud init skipped. Local storage in uso.", e);
+      }
+
+      useFirebase = false;
+      state.user = { uid: 'local-user' };
+      state.isAuthLoading = false;
+      loadLocalProgress();
+      renderApp();
+    };
+
+    const saveProgress = async (newCompleted, newMistakes) => {
+      if (useFirebase && state.user && state.user.uid !== 'local-user') {
+        try {
+          const userDocRef = doc(db, 'artifacts', appId, 'users', state.user.uid, 'profile', 'data');
+          await setDoc(userDocRef, {
+            completedDays: newCompleted,
+            mistakesRecord: newMistakes,
+            profileName: state.profileName,
+            lastUpdated: new Date().toISOString()
+          }, { merge: true });
+        } catch (e) { console.error("Failed to save:", e); }
+      } else {
+        localStorage.setItem('sara_korean_save', JSON.stringify({
+          completedDays: newCompleted,
+          mistakesRecord: newMistakes,
+          profileName: state.profileName
+        }));
+        showSaveToast(); 
+      }
+    };
+
+    // --- AUDIO & TRANSLATION ---
+    window.playAudio = (e, textHangul) => {
+      if (e) { e.stopPropagation(); e.preventDefault(); }
+      if (!textHangul) return;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(textHangul);
+        utterance.lang = 'ko-KR'; 
+        utterance.rate = 0.85; 
+        
+        const voices = window.speechSynthesis.getVoices();
+        const koVoices = voices.filter(v => v.lang.includes('ko'));
+        if(koVoices.length > 0) {
+          let bestVoice = koVoices.find(v => /Yuna|Somi|Female|Google/i.test(v.name));
+          if(!bestVoice) bestVoice = koVoices[0];
+          utterance.voice = bestVoice;
+        }
+        window.speechSynthesis.speak(utterance);
+      } else {
+        alert("Il tuo browser non supporta la pronuncia vocale.");
+      }
+    };
+
+    window.runTranslation = async () => {
+      const inputEl = document.getElementById('transInput');
+      if (!inputEl || !inputEl.value.trim()) return;
+      
+      const text = inputEl.value.trim();
+      state.transLoading = true;
+      state.transResult = "Traducendo...";
+      state.transRomaji = "";
+      renderApp();
+
+      try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=it&tl=ko&dt=t&dt=rm&q=${encodeURIComponent(text)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        let koText = "";
+        let romajiText = "";
+
+        if (data && data[0]) {
+            data[0].forEach(item => {
+                if (item[0] && typeof item[0] === 'string' && item[0] !== "null" && !item[0].match(/^[a-zA-Z\s]+$/)) {
+                    koText += item[0];
+                }
+                if (item[2] && typeof item[2] === 'string' && /^[a-zA-Zāēīōūōōuu\-\s\'eou]+$/i.test(item[2])) {
+                    romajiText += item[2];
+                } else if (item[3] && typeof item[3] === 'string' && /^[a-zA-Zāēīōūōōuu\-\s\'eou]+$/i.test(item[3])) {
+                    romajiText += item[3]; 
+                }
+            });
+            
+            if(!romajiText && data[0].length > 1) {
+                const lastEl = data[0][data[0].length - 1];
+                if(lastEl && typeof lastEl[2] === 'string') romajiText = lastEl[2];
+                else if(lastEl && typeof lastEl[3] === 'string') romajiText = lastEl[3];
+            }
+
+            state.transResult = koText || "Impossibile tradurre.";
+            state.transRomaji = romajiText ? romajiText.trim() : "Audio disponibile sotto";
+        } else {
+            state.transResult = "Impossibile tradurre.";
+        }
+      } catch(e) {
+        state.transResult = "Errore di rete. Riprova.";
+      }
+      
+      state.transLoading = false;
+      renderApp();
+    };
+
+    window.initMap = () => {
+        const container = document.getElementById('korea-map');
+        if (!container) return;
+        
+        if (myMap !== null) {
+            myMap.remove();
+            myMap = null;
+        }
+
+        myMap = L.map('korea-map', {
+            zoomControl: false,
+            scrollWheelZoom: false 
+        }).setView([35.9078, 127.7669], 6);
+        
+        L.control.zoom({ position: 'topright' }).addTo(myMap);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap',
+            className: 'map-tiles'
+        }).addTo(myMap);
+
+        MAP_REGIONS.forEach(region => {
+            const icon = L.divIcon({
+                className: 'custom-map-icon',
+                html: `<div class="animate-bounce-slow border-4 border-pink-400">${region.icon}</div>`,
+                iconSize: [44, 44],
+                iconAnchor: [22, 22],
+                popupAnchor: [0, -22]
+            });
+
+            const marker = L.marker([region.lat, region.lng], {icon: icon}).addTo(myMap);
+            
+            marker.bindPopup(`
+                <div class="p-2 text-center min-w-[150px]">
+                    <h3 class="font-black text-lg text-gray-800 mb-1">${region.name}</h3>
+                    <div class="text-3xl mb-2">${region.emoji}</div>
+                    <p class="text-sm font-bold text-gray-600 mb-3">${region.desc}</p>
+                    <div class="flex flex-wrap justify-center gap-1">
+                        ${region.keywords.map(kw => `<span class="bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black uppercase">${kw}</span>`).join('')}
+                    </div>
+                </div>
+            `);
+        });
+    };
+
+    // --- GLOBAL ACTIONS ---
+    window.changeView = (view) => {
+      state.currentView = view;
+      renderApp();
+    };
+
+    window.startDay = (dayNum) => {
+      state.activeDay = dayNum;
+      state.currentView = 'theory';
+      state.gameStep = 0;
+      state.score = 0;
+      state.combo = 0;
+      state.selectedAnswer = null;
+      state.showFeedback = false;
+      state.currentMistakes = [];
+      renderApp();
+    };
+
+    window.startGame = () => {
+      state.currentView = 'game';
+      renderApp();
+    };
+
+    window.handleMultipleChoiceAnswer = (index) => {
+      if (state.showFeedback) return;
+      
+      const exercise = COURSE_DATA.find(d => d.day === state.activeDay).exercises[state.gameStep];
+      
+      if (exercise.optionsHangul && exercise.optionsHangul[index]) {
+        window.playAudio(null, exercise.optionsHangul[index]);
+      }
+
+      state.selectedAnswer = index;
+      state.showFeedback = true;
+      
+      if (index === exercise.answer) {
+        state.score += 1;
+        state.combo += 1; 
+      } else {
+        state.combo = 0; 
+        state.currentMistakes.push(exercise.conceptTag);
+      }
+      renderApp();
+    };
+
+    window.handleSpeechRecognition = (e) => {
+      if (e) e.preventDefault();
+      if (state.selectedAnswer !== null || state.isRecording) return;
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Riconoscimento vocale non supportato nel tuo browser. Saltiamo questo esercizio per ora!");
+        state.score += 1;
+        state.selectedAnswer = true;
+        state.showFeedback = true;
+        renderApp();
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'ko-KR';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      
+      state.isRecording = true;
+      renderApp();
+
+      recognition.onresult = (event) => {
+        state.isRecording = false;
+        let rawTranscript = event.results[0][0].transcript;
+        let transcript = rawTranscript.toLowerCase().trim();
+        
+        const cleanTranscript = transcript.replace(/[.,!?。、！？\s]/g, '');
+        const exercise = COURSE_DATA.find(d => d.day === state.activeDay).exercises[state.gameStep];
+        
+        const isMatchHangul = exercise.expectedHangul.some(k => cleanTranscript.includes(k.replace(/[.,!?。、！？\s]/g, '')));
+        const isMatchRomaji = exercise.expectedRomaji.some(r => cleanTranscript.includes(r.replace(/[.,!?。、！？\s]/g, '')));
+        
+        const isMatch = cleanTranscript.length > 0 && (isMatchHangul || isMatchRomaji);
+        
+        state.selectedAnswer = isMatch;
+        state.showFeedback = true;
+
+        if (isMatch) {
+            state.score += 1;
+            state.combo += 1;
+        } else {
+            state.combo = 0;
+            exercise.feedback_incorrect = `Hai detto: "${rawTranscript}". Riprova, concentrati sulla pronuncia!`;
+            state.currentMistakes.push(exercise.conceptTag);
+        }
+        renderApp();
+      };
+
+      recognition.onerror = (event) => {
+        state.isRecording = false;
+        state.showFeedback = true;
+        state.selectedAnswer = false; 
+        state.combo = 0;
+        
+        const exercise = COURSE_DATA.find(d => d.day === state.activeDay).exercises[state.gameStep];
+        
+        if (event.error === 'not-allowed') {
+          exercise.feedback_incorrect = "Microfono bloccato. Permetti l'accesso al microfono!";
+        } else if (event.error === 'no-speech') {
+          exercise.feedback_incorrect = "Nessun suono rilevato. Parla chiaramente nel microfono.";
+        } else { 
+          exercise.feedback_incorrect = "Errore: " + event.error;
+        }
+        renderApp();
+      };
+      
+      recognition.start();
+    };
+
+    window.nextQuestion = () => {
+      const currentLesson = COURSE_DATA.find(d => d.day === state.activeDay);
+      if (state.gameStep < currentLesson.exercises.length - 1) {
+        state.gameStep += 1;
+        state.selectedAnswer = null;
+        state.showFeedback = false;
+      } else {
+        const newCompleted = state.completedDays.includes(state.activeDay) ? state.completedDays : [...state.completedDays, state.activeDay];
+        const newMistakes = { ...state.mistakesRecord, [state.activeDay]: state.currentMistakes };
+        
+        state.completedDays = newCompleted;
+        state.mistakesRecord = newMistakes;
+        saveProgress(newCompleted, newMistakes);
+        
+        state.currentView = 'result';
+      }
+      renderApp();
+    };
+
+    window.updateProfileName = (val) => {
+      state.profileName = val;
+      saveProgress(state.completedDays, state.mistakesRecord);
+      renderApp();
+    };
+
+    window.handleSwitchAccount = async () => {
+      if(!confirm("Vuoi davvero azzerare i tuoi progressi, Sara?")) return;
+      try {
+        if (useFirebase && state.user && state.user.uid !== 'local-user') {
+          await signOut(auth);
+        } else {
+          localStorage.removeItem('sara_korean_save');
+        }
+        state.completedDays = [];
+        state.mistakesRecord = {};
+        state.currentView = 'dashboard';
+        saveProgress([], {}); 
+        renderApp();
+      } catch (e) { console.error(e); }
+    };
+
+    // --- RENDER FUNCTIONS ---
+    const renderApp = () => {
+      const root = document.getElementById('root');
+      
+      if (state.isAuthLoading) {
+        root.innerHTML = `<div class="min-h-screen flex items-center justify-center text-blue-500"><i data-lucide="loader-2" class="animate-spin w-12 h-12"></i></div>`;
+        lucide.createIcons();
+        return;
+      }
+
+      let content = '';
+      if (state.currentView === 'dashboard') content = renderDashboard();
+      else if (state.currentView === 'theory') content = renderTheory();
+      else if (state.currentView === 'game') content = renderGame();
+      else if (state.currentView === 'result') content = renderResult();
+      else if (state.currentView === 'library') content = renderLibrary();
+      else if (state.currentView === 'explore') content = renderExplore();
+      else if (state.currentView === 'profile') content = renderProfile();
+
+      root.innerHTML = `
+        ${renderNav()}
+        <main class="p-4 md:p-8 pt-4 md:pt-8 pb-32 md:pb-12 max-w-[100vw] overflow-x-hidden">
+          ${content}
+        </main>
+      `;
+      lucide.createIcons();
+
+      if (state.currentView === 'explore') {
+          setTimeout(window.initMap, 50);
+      }
+    };
+
+    const renderNav = () => {
+      return `
+        <nav class="fixed bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-blue-100 pb-safe md:relative md:border-b md:border-t-0 z-[9999] shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)]">
+          <div class="max-w-4xl mx-auto flex justify-between md:justify-center md:gap-16 px-4 py-3 md:p-5">
+            <button onclick="window.changeView('dashboard')" class="flex flex-col items-center gap-1 transition-all ${state.currentView === 'dashboard' ? 'text-pink-500 scale-110' : 'text-gray-400 hover:text-blue-500'}">
+              <i data-lucide="map-pin" class="w-6 h-6 md:w-7 md:h-7"></i>
+              <span class="text-[10px] md:text-xs font-black uppercase tracking-widest">Percorso</span>
+            </button>
+            <button onclick="window.changeView('explore')" class="flex flex-col items-center gap-1 transition-all ${state.currentView === 'explore' ? 'text-pink-500 scale-110' : 'text-gray-400 hover:text-blue-500'}">
+              <i data-lucide="compass" class="w-6 h-6 md:w-7 md:h-7"></i>
+              <span class="text-[10px] md:text-xs font-black uppercase tracking-widest">Esplora</span>
+            </button>
+            <button onclick="window.changeView('library')" class="flex flex-col items-center gap-1 transition-all ${state.currentView === 'library' ? 'text-pink-500 scale-110' : 'text-gray-400 hover:text-blue-500'}">
+              <i data-lucide="book-marked" class="w-6 h-6 md:w-7 md:h-7"></i>
+              <span class="text-[10px] md:text-xs font-black uppercase tracking-widest">Guida</span>
+            </button>
+            <button onclick="window.changeView('profile')" class="flex flex-col items-center gap-1 transition-all ${state.currentView === 'profile' ? 'text-pink-500 scale-110' : 'text-gray-400 hover:text-blue-500'}">
+              <i data-lucide="circle-user-round" class="w-6 h-6 md:w-7 md:h-7"></i>
+              <span class="text-[10px] md:text-xs font-black uppercase tracking-widest">Profilo</span>
+            </button>
+          </div>
+        </nav>
+      `;
+    };
+
+    const renderDashboard = () => {
+      const totalProgress = Math.min((state.completedDays.length / 30) * 100, 100);
+
+      let html = `
+      <div class="max-w-4xl mx-auto pb-20 relative">
+        <div class="hangul-watermark">가자</div>
+        
+        <header class="bg-gradient-to-br from-pink-400 via-pink-300 to-blue-400 text-white rounded-[2rem] p-8 md:p-10 mb-8 korean-shadow flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
+          <div class="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
+             <i data-lucide="sparkles" class="w-48 h-48"></i>
+          </div>
+          <div class="z-10">
+            <h1 class="text-4xl md:text-5xl font-black mb-3 tracking-tight">Annyeong, ${state.profileName}! 🌸</h1>
+            <p class="text-pink-50 text-xl font-bold mb-4">Il tuo percorso verso la fluidità in Coreano in 30 giorni.</p>
+            
+            <div class="w-full max-w-md bg-white/20 h-4 rounded-full overflow-hidden backdrop-blur-sm border border-white/30">
+               <div class="bg-white h-full transition-all duration-1000" style="width: ${totalProgress}%"></div>
+            </div>
+            <p class="text-sm font-bold mt-2">${Math.round(totalProgress)}% Completato. Forza Sara!</p>
+
+          </div>
+          <div class="flex gap-4 w-full md:w-auto z-10">
+            <div class="flex-1 md:flex-none flex flex-col items-center justify-center bg-white/20 p-4 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner">
+              <i data-lucide="award" class="text-yellow-300 mb-1 w-8 h-8"></i>
+              <span class="font-black text-sm">${state.completedDays.length} / 30 Giorni</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="bg-white rounded-[2rem] korean-shadow p-6 md:p-10 mb-8 border border-blue-50 relative z-10">
+          <div class="flex justify-between items-center mb-8 border-b-2 border-blue-50 pb-4">
+            <h2 class="text-3xl font-black text-gray-800 flex items-center gap-3">
+              <i data-lucide="map" class="text-blue-400 w-8 h-8"></i> Mappa del Percorso 🗺️
+            </h2>
+          </div>
+          <p class="text-gray-500 mb-10 font-bold text-lg">Le lezioni avanzate includono "Ripasso Dinamico" per non dimenticare nulla!</p>
+
+          <div class="space-y-8 relative before:absolute before:inset-0 before:ml-6 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-1.5 before:bg-gradient-to-b before:from-pink-200 before:via-blue-200 before:to-gray-200 before:rounded-full">
+      `;
+
+      COURSE_DATA.forEach(dayData => {
+        const isCompleted = state.completedDays.includes(dayData.day);
+        const isLocked = dayData.day > 1 && !state.completedDays.includes(dayData.day - 1);
+        const dayMistakes = state.mistakesRecord[dayData.day] || [];
+        const needsReview = isCompleted && dayMistakes.length > 0;
+
+        let circleClass = "bg-pink-500 text-white transform scale-110 shadow-lg shadow-pink-500/40 border-4 border-white";
+        let circleContent = dayData.day;
+        if (isCompleted) { circleClass = "bg-blue-500 text-white shadow-md border-4 border-blue-100"; circleContent = `<i data-lucide="check" class="w-6 h-6"></i>`; }
+        else if (isLocked) { circleClass = "bg-gray-200 text-gray-400 border-4 border-white"; }
+
+        let badgeHtml = '';
+        if (isCompleted && !needsReview) badgeHtml += `<span class="text-xs font-black text-blue-700 bg-blue-100 px-3 py-1 rounded-full uppercase tracking-wider">Completato</span>`;
+        if (needsReview) badgeHtml += `<span class="text-xs font-black text-orange-700 bg-orange-100 px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider"><i data-lucide="alert-circle" class="w-3 h-3"></i> Ripasso</span>`;
+        if (isLocked) badgeHtml += `<span class="text-xs font-black text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-wider">Bloccato</span>`;
+
+        let btnHtml = '';
+        if (!isLocked) {
+          const btnClass = isCompleted ? 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100' : 'bg-pink-500 text-white hover:bg-pink-600 shadow-md shadow-pink-500/30';
+          const icon = needsReview ? `<i data-lucide="rotate-ccw" class="w-6 h-6"></i>` : `<i data-lucide="play" class="w-6 h-6 ml-1"></i>`;
+          btnHtml = `<button onclick="window.startDay(${dayData.day})" class="p-4 rounded-full transition-all hover:scale-110 shrink-0 ${btnClass}">${icon}</button>`;
+        }
+
+        html += `
+          <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group ${isLocked ? 'opacity-60 grayscale-[30%]' : ''}">
+            <div class="flex items-center justify-center w-12 h-12 rounded-full shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 font-black text-lg transition-transform ${circleClass}">
+              ${circleContent}
+            </div>
+            <div class="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] bg-white p-6 rounded-[1.5rem] shadow-sm border-2 border-gray-50 transition-all hover:shadow-lg hover:-translate-y-1 hover:border-pink-200">
+              <div class="flex justify-between items-center gap-4">
+                <div class="flex-1">
+                  <span class="text-[11px] font-black text-pink-500 uppercase tracking-widest block mb-1">${dayData.topic}</span>
+                  <h3 class="font-black text-gray-800 leading-tight mb-3 text-xl">${dayData.title}</h3>
+                  <p class="text-xs text-gray-400 font-bold mb-2">${dayData.exercises.length} Esercizi</p>
+                  <div class="flex flex-wrap gap-2 mt-2">${badgeHtml}</div>
+                </div>
+                ${btnHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div></div></div>`;
+      return html;
+    };
+
+    const renderExplore = () => {
+      let html = `
+      <div class="max-w-5xl mx-auto pb-24 mt-2 md:mt-6 animate-pop">
+        
+        <div class="bg-white rounded-[3rem] p-10 md:p-12 mb-10 korean-shadow border border-blue-50 text-center relative overflow-hidden">
+          <div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMiIgZmlsbD0iI2QxZDVkYiIvPjwvc3ZnPg==')]"></div>
+          <h1 class="text-4xl md:text-5xl font-black text-gray-900 mb-4 relative z-10 flex justify-center items-center gap-3">
+             <i data-lucide="compass" class="w-12 h-12 text-blue-500"></i> Esplora la Corea 🇰🇷
+          </h1>
+          <p class="text-gray-500 text-xl font-bold relative z-10">Scopri la cultura regionale e le destinazioni di tendenza.</p>
+        </div>
+
+        <div class="w-full h-[450px] md:h-[500px] rounded-[2rem] shadow-xl border-4 border-white mb-12 z-0 relative overflow-hidden">
+             <div id="korea-map" class="absolute inset-0"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      `;
+
+      MAP_REGIONS.forEach(region => {
+        html += `
+          <div class="bg-white rounded-[2rem] p-8 shadow-md border-2 border-gray-50 hover:shadow-xl hover:-translate-y-1 hover:border-blue-100 transition-all group">
+            <div class="flex justify-between items-start mb-6">
+              <div class="flex items-center gap-4">
+                <span class="text-5xl bg-blue-50 p-4 rounded-3xl group-hover:scale-110 transition-transform cursor-pointer" onclick="window.playAudio(event, '${region.name.split(' ')[0]}')">${region.icon}</span>
+                <h2 class="text-3xl font-black text-gray-800">${region.name}</h2>
+              </div>
+            </div>
+            <p class="text-gray-600 font-bold text-lg mb-6 leading-relaxed">${region.desc}</p>
+            <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+               <span class="text-xs font-black text-blue-500 uppercase tracking-widest mb-3 block">Vibes Locali</span>
+               <div class="flex flex-wrap gap-3 items-center">
+                  <span class="text-3xl hover:animate-bounce cursor-pointer">${region.emoji}</span>
+                  ${region.keywords.map(kw => `<span class="bg-white px-4 py-2 rounded-full text-sm font-bold text-gray-700 shadow-sm border border-gray-100 hover:text-blue-600 transition-colors">${kw}</span>`).join('')}
+               </div>
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div></div>`;
+      return html;
+    };
+
+    const renderTheory = () => {
+      const lesson = COURSE_DATA.find(d => d.day === state.activeDay);
+      
+      let examplesHtml = lesson.theory.examples.map(ex => `
+        <div class="bg-white border-2 border-gray-100 p-6 rounded-[1.5rem] flex flex-col sm:flex-row sm:items-center justify-between gap-5 shadow-sm hover:shadow-md hover:border-pink-200 transition-all group">
+          <div>
+            <p class="text-3xl font-black text-gray-900 mb-2 group-hover:text-pink-600 transition-colors" style="font-family: 'Noto Sans KR'">${ex.hangul}</p>
+            <p class="text-blue-500 font-bold mb-1 tracking-wide">${ex.romaji}</p>
+            <p class="text-gray-700 font-black text-lg mb-2">"${ex.eng}"</p>
+            ${ex.context ? `<p class="text-sm text-gray-500 bg-gray-50 p-3 rounded-xl font-bold border border-gray-100 inline-block">${ex.context}</p>` : ''}
+          </div>
+          <button onclick="window.playAudio(event, '${ex.hangul}')" class="flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 border-2 border-blue-100 text-blue-700 px-6 py-4 rounded-2xl transition-transform hover:scale-105 shrink-0 shadow-sm w-full sm:w-auto mt-4 sm:mt-0">
+            <i data-lucide="volume-2" class="w-6 h-6"></i><span class="font-black">Ascolta</span>
+          </button>
+        </div>
+      `).join('');
+
+      return `
+      <div class="max-w-3xl mx-auto pb-20 mt-2 md:mt-6 animate-pop">
+        <button onclick="window.changeView('dashboard')" class="text-gray-500 mb-6 flex items-center hover:text-gray-800 font-black transition-colors px-2 py-1 rounded-lg hover:bg-gray-100 w-fit">
+          <i data-lucide="arrow-left" class="w-6 h-6 mr-2"></i> Torna alla Mappa
+        </button>
+
+        <div class="bg-white rounded-[2rem] korean-shadow overflow-hidden border border-blue-50">
+          <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-8 md:p-12 relative overflow-hidden">
+            <i data-lucide="book-open" class="absolute right-0 bottom-0 w-48 h-48 opacity-10 transform translate-x-10 translate-y-10"></i>
+            <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-xs font-black tracking-widest uppercase mb-6 inline-block shadow-sm border border-white/30">
+              Giorno ${lesson.day} • Teoria
+            </span>
+            <h2 class="text-3xl md:text-5xl font-black leading-tight relative z-10">${lesson.title}</h2>
+          </div>
+          
+          <div class="p-6 md:p-12 space-y-12 text-gray-700 text-lg">
+            <div class="flex gap-5 items-start bg-pink-50 p-8 rounded-[1.5rem] border border-pink-100 shadow-sm">
+              <i data-lucide="quote" class="text-pink-500 shrink-0 mt-1 w-10 h-10"></i>
+              <p class="leading-relaxed font-bold text-pink-900 text-xl">${lesson.theory.intro}</p>
+            </div>
+
+            <div>
+              <h3 class="font-black text-gray-800 mb-6 flex items-center gap-3 text-2xl">
+                <div class="p-2 bg-blue-100 rounded-xl text-blue-600"><i data-lucide="brain" class="w-6 h-6"></i></div> 
+                Il Concetto Base
+              </h3>
+              <p class="text-gray-600 font-bold leading-relaxed text-xl">${lesson.theory.concept}</p>
+            </div>
+
+            <div>
+              <h3 class="font-black text-gray-800 mb-6 text-2xl border-b-2 pb-3 border-gray-100">Frasi Chiave 📝</h3>
+              <div class="space-y-6">
+                ${examplesHtml}
+              </div>
+            </div>
+
+            <div class="bg-green-50 rounded-[1.5rem] p-8 border border-green-100 flex gap-5 items-start shadow-sm">
+              <i data-lucide="leaf" class="text-green-600 shrink-0 mt-1 w-10 h-10"></i>
+              <div>
+                <h3 class="font-black text-green-900 mb-2 text-xl">Dettaglio Culturale 🎎</h3>
+                <p class="text-green-800 font-bold leading-relaxed">${lesson.theory.culture}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-6 md:p-10 bg-gray-50 border-t-2 border-gray-100 flex justify-end">
+            <button onclick="window.startGame()" class="bg-pink-500 hover:bg-pink-600 text-white px-10 py-5 rounded-2xl font-black text-xl shadow-lg shadow-pink-500/30 flex items-center justify-center gap-3 transition-transform transform hover:scale-105 w-full md:w-auto">
+              Inizia la Pratica (${lesson.exercises.length} Es) <i data-lucide="play-circle" class="w-7 h-7"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      `;
+    };
+
+    const renderGame = () => {
+      const lesson = COURSE_DATA.find(d => d.day === state.activeDay);
+      const exercise = lesson.exercises[state.gameStep];
+      const isAnswered = state.selectedAnswer !== null;
+      
+      let isCorrect = false;
+      if (exercise.type === 'multiple_choice' || exercise.type === 'listen' || exercise.type === 'conversation') {
+        isCorrect = isAnswered && state.selectedAnswer === exercise.answer;
+      } else if (exercise.type === 'speak') {
+        isCorrect = isAnswered && state.selectedAnswer === true;
+      }
+
+      const progressWidth = (state.gameStep / lesson.exercises.length) * 100;
+      
+      let typeLabel = 'Quiz di Conoscenza';
+      let typeIcon = 'brain';
+      let typeColor = 'text-blue-700 bg-blue-50 border-blue-100';
+      if(exercise.type === 'speak') { typeLabel = 'Esercizio di Pronuncia'; typeIcon = 'mic'; typeColor = 'text-pink-700 bg-pink-50 border-pink-100'; }
+      else if(exercise.type === 'listen') { typeLabel = 'Esercizio di Ascolto'; typeIcon = 'headphones'; typeColor = 'text-indigo-700 bg-indigo-50 border-indigo-100'; }
+      else if(exercise.type === 'conversation') { typeLabel = 'Scenario Reale'; typeIcon = 'message-square'; typeColor = 'text-orange-700 bg-orange-50 border-orange-100'; }
+
+      let exerciseHtml = '';
+
+      let contextHtml = '';
+      if (exercise.type === 'conversation' && exercise.context) {
+        contextHtml = `
+          <div class="mb-10 w-full flex justify-start">
+            <div class="chat-bubble bg-orange-50 border-2 border-orange-100 p-6 rounded-2xl rounded-bl-none shadow-sm relative w-11/12 md:w-3/4">
+              <p class="text-orange-900 font-bold text-lg">${exercise.context}</p>
+            </div>
+          </div>
+        `;
+      }
+
+      if (exercise.type === 'multiple_choice' || exercise.type === 'listen' || exercise.type === 'conversation') {
+        exerciseHtml = `<div class="space-y-5">` + exercise.options.map((opt, i) => {
+          let btnClass = "bg-white border-2 border-gray-200 text-gray-700 hover:border-pink-400 hover:bg-pink-50";
+          let iconHtml = '';
+          if (isAnswered) {
+            if (i === exercise.answer) {
+              btnClass = "bg-green-50 border-2 border-green-500 text-green-900 shadow-md transform scale-[1.02] z-10";
+              iconHtml = `<i data-lucide="check-circle-2" class="text-green-500 w-8 h-8 animate-pop"></i>`;
+            } else if (i === state.selectedAnswer) {
+              btnClass = "bg-rose-50 border-2 border-rose-500 text-rose-900";
+              iconHtml = `<i data-lucide="x-circle" class="text-rose-500 w-8 h-8"></i>`;
+            } else {
+              btnClass = "bg-gray-50 border-2 border-gray-100 text-gray-400 opacity-60";
+            }
+          }
+
+          let optionAudioBtn = '';
+          if (exercise.optionsHangul && exercise.optionsHangul[i]) {
+            optionAudioBtn = `
+              <button onclick="window.playAudio(event, '${exercise.optionsHangul[i]}')" class="p-3 md:p-4 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-200 transition-colors shrink-0 z-10 border border-blue-100 mr-2 shadow-sm">
+                 <i data-lucide="volume-2" class="w-6 h-6"></i>
+              </button>
+            `;
+          }
+
+          return `
+            <div class="relative w-full rounded-[1.2rem] transition-all cursor-pointer shadow-sm hover:shadow-md ${btnClass}" onclick="if(!${isAnswered}) window.handleMultipleChoiceAnswer(${i})">
+              <div class="flex items-center w-full p-4 md:p-6 h-full">
+                ${optionAudioBtn}
+                <span class="font-black text-xl md:text-2xl flex-grow" style="${/[\u3131-\uD79D]/ugi.test(opt) ? "font-family: 'Noto Sans KR'" : ""}">${opt}</span>
+                <div class="flex items-center gap-3 shrink-0 ml-4">
+                  ${iconHtml}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('') + `</div>`;
+      } else if (exercise.type === 'speak') {
+        const btnClasses = state.isRecording ? 'bg-pink-500 scale-110 shadow-2xl shadow-pink-500/50 animate-pulse border-white border-4' : isAnswered ? 'bg-gray-200 text-gray-400' : 'bg-blue-500 hover:bg-blue-600 text-white shadow-xl hover:scale-105 border-4 border-blue-200';
+        const msg = state.isRecording ? "Ti ascolto... Parla chiaramente!" : isAnswered ? "Analisi completata." : "Tocca per parlare in Coreano";
+        exerciseHtml = `
+          <div class="flex flex-col items-center justify-center mt-12 space-y-8 bg-gray-50 p-10 rounded-[2rem] border-2 border-dashed border-gray-200">
+            <button ${isAnswered || state.isRecording ? 'disabled' : ''} 
+              onmousedown="window.handleSpeechRecognition(event)" 
+              ontouchstart="window.handleSpeechRecognition(event)" 
+              class="relative w-40 h-40 rounded-full flex items-center justify-center transition-all ${btnClasses} no-select">
+              <i data-lucide="mic" class="w-16 h-16"></i>
+            </button>
+            <p class="text-gray-600 font-black text-center text-xl">${msg}</p>
+          </div>
+        `;
+      }
+
+      const feedbackClass = isCorrect ? 'bg-green-50 border-green-200 text-green-900' : 'bg-rose-50 border-rose-200 text-rose-900';
+      const iconClass = isCorrect ? 'bg-green-500' : 'bg-rose-500';
+      const iconType = isCorrect ? 'check' : 'message-circle-warning';
+      const headingText = isCorrect ? 'Perfetto, Sara! 🎉' : 'Consiglio del Sensei 💡';
+      const btnFeedClass = isCorrect ? 'bg-green-500 hover:bg-green-600 shadow-green-500/30' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/30';
+      const btnText = state.gameStep === lesson.exercises.length - 1 ? 'Termina Lezione' : 'Prossima Domanda';
+
+      return `
+      <div class="max-w-2xl mx-auto pb-20 mt-2 md:mt-6 animate-pop">
+        
+        <div class="flex justify-between items-center mb-6 px-2">
+            <div class="flex items-center gap-2">
+                <i data-lucide="flame" class="w-8 h-8 ${state.combo > 1 ? 'text-orange-500 animate-pulse' : 'text-gray-300'}"></i>
+                <span class="font-black text-xl ${state.combo > 1 ? 'text-orange-600' : 'text-gray-400'}">Streak: ${state.combo}</span>
+            </div>
+            <span class="font-black text-gray-500 text-lg bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">${state.gameStep + 1} / ${lesson.exercises.length}</span>
+        </div>
+
+        <div class="mb-8 flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
+          <div class="flex-grow bg-gray-100 h-5 rounded-xl overflow-hidden shadow-inner">
+            <div class="bg-gradient-to-r from-blue-400 to-pink-500 h-full transition-all duration-700 ease-out" style="width: ${progressWidth}%"></div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-[2.5rem] korean-shadow p-6 md:p-12 min-h-[550px] flex flex-col border border-blue-50 relative overflow-hidden">
+          <div class="flex-grow z-10">
+            <div class="flex justify-center mb-10">
+               <span class="${typeColor} text-sm font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-sm border flex items-center gap-2">
+                 <i data-lucide="${typeIcon}" class="w-4 h-4"></i> ${typeLabel}
+               </span>
+            </div>
+
+            ${exercise.type === 'listen' ? `
+              <div class="flex justify-center mb-12">
+                <button onclick="window.playAudio(event, '${exercise.audioHangul}')" class="flex items-center justify-center gap-3 bg-pink-500 hover:bg-pink-600 text-white px-10 py-5 rounded-full transition-transform hover:scale-105 shadow-xl shadow-pink-500/30">
+                  <i data-lucide="volume-2" class="w-8 h-8 animate-pulse"></i><span class="font-black text-xl">Riproduci Audio</span>
+                </button>
+              </div>
+            ` : ''}
+
+            ${contextHtml}
+            
+            <h2 class="text-3xl md:text-4xl font-black text-gray-800 mb-12 text-center leading-snug">
+              ${exercise.question}
+            </h2>
+
+            ${exerciseHtml}
+          </div>
+
+          <div class="mt-12 transition-all duration-500 z-10 ${isAnswered ? 'opacity-100 translate-y-0 block' : 'opacity-0 translate-y-4 hidden'}">
+            <div class="p-6 md:p-8 rounded-[1.5rem] flex gap-5 items-start shadow-sm border-2 ${feedbackClass}">
+              <div class="p-3 rounded-full text-white shrink-0 shadow-md ${iconClass}">
+                  <i data-lucide="${iconType}" class="w-8 h-8"></i>
+              </div>
+              <div class="flex-grow">
+                <h4 class="font-black text-2xl mb-2">${headingText}</h4>
+                <p class="font-bold text-lg">${isCorrect ? "Ottimo lavoro! Continua così." : exercise.feedback_incorrect}</p>
+              </div>
+            </div>
+            <button onclick="window.nextQuestion()" class="w-full mt-6 py-6 rounded-2xl font-black text-2xl text-white shadow-xl transition-transform transform hover:scale-[1.02] ${btnFeedClass}">
+              ${btnText}
+            </button>
+          </div>
+        </div>
+      </div>
+      `;
+    };
+
+    const renderResult = () => {
+      const lesson = COURSE_DATA.find(d => d.day === state.activeDay);
+      const total = lesson.exercises.length;
+      const isPerfect = state.score === total;
+
+      const mistakesHtml = state.currentMistakes.length > 0 
+        ? `<div class="bg-rose-50 border-2 border-rose-200 text-rose-900 p-6 rounded-2xl mb-10 text-left shadow-sm">
+             <span class="font-black block mb-3 text-lg flex items-center gap-2"><i data-lucide="book-open" class="w-6 h-6"></i> Concetti da rivedere:</span>
+             <ul class="list-disc pl-6 font-bold space-y-2 text-rose-800">
+               ${[...new Set(state.currentMistakes)].map(m => `<li>${m}</li>`).join('')}
+             </ul>
+           </div>` 
+        : '';
+
+      return `
+      <div class="max-w-lg mx-auto mt-12 text-center px-4 animate-pop">
+        <div class="bg-white rounded-[3rem] korean-shadow p-10 md:p-16 border border-blue-50 relative overflow-hidden">
+          
+          <div class="absolute inset-0 z-0 pointer-events-none opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMiIgZmlsbD0iI2QxZDVkYiIvPjwvc3ZnPg==')]"></div>
+
+          <div class="w-32 h-32 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-500 text-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-yellow-500/40 relative z-10 animate-pop">
+            <i data-lucide="trophy" class="w-16 h-16"></i>
+          </div>
+          <h2 class="text-5xl font-black text-gray-900 mb-3 relative z-10">Bravissima!</h2>
+          <p class="text-blue-500 mb-10 font-black uppercase tracking-widest text-sm relative z-10">Giorno ${state.activeDay}: ${lesson.topic}</p>
+          
+          <div class="text-[5rem] font-black text-pink-500 mb-6 drop-shadow-md relative z-10 leading-none">${state.score}<span class="text-4xl text-gray-400">/${total}</span></div>
+          
+          ${mistakesHtml}
+
+          <p class="text-xl font-bold text-gray-600 mb-12 leading-relaxed relative z-10">
+            ${isPerfect ? "Sei una forza della natura, Sara! Zero errori. 🌸" : "Ottimo sforzo! La costanza è il vero segreto della fluidità."}
+          </p>
+          <button onclick="window.changeView('dashboard')" class="w-full bg-gray-900 hover:bg-black text-white py-6 rounded-2xl font-black text-2xl shadow-xl transition-transform transform hover:scale-[1.02] relative z-10 flex justify-center items-center gap-3">
+            <i data-lucide="map" class="w-7 h-7"></i> Torna al Percorso
+          </button>
+        </div>
+      </div>
+      `;
+    };
+
+    const renderLibrary = () => {
+      let html = `
+      <div class="max-w-5xl mx-auto pb-24 mt-2 md:mt-6 animate-pop">
+        
+        <div class="bg-white p-8 md:p-10 rounded-[2.5rem] korean-shadow border border-blue-50 mb-12 relative overflow-hidden">
+          <div class="absolute right-0 top-0 w-64 h-64 bg-gradient-to-bl from-pink-50 to-transparent rounded-bl-full -z-10"></div>
+          
+          <h2 class="text-3xl font-black text-gray-900 mb-3 flex items-center gap-3">
+            <div class="p-3 bg-pink-100 text-pink-600 rounded-2xl"><i data-lucide="bot" class="w-8 h-8"></i></div> 
+            Traduttore Intelligente
+          </h2>
+          <p class="text-gray-500 font-bold mb-8 text-lg">Scrivi una frase in Italiano per ottenere la traduzione in Coreano, con pronuncia.</p>
+          
+          <div class="flex flex-col md:flex-row gap-4 mb-4 z-10 relative">
+            <input type="text" id="transInput" value="${state.transInput}" onchange="state.transInput = this.value" placeholder="es., Dov'è la stazione?" class="flex-grow border-2 border-gray-200 rounded-2xl p-5 text-xl font-bold text-gray-800 focus:border-pink-500 focus:ring-4 focus:ring-pink-100 outline-none transition-all shadow-sm" />
+            <button onclick="window.runTranslation()" class="bg-pink-500 hover:bg-pink-600 text-white px-10 py-5 rounded-2xl font-black text-xl transition-transform hover:scale-105 shadow-xl shadow-pink-500/30 flex justify-center items-center gap-3">
+              ${state.transLoading ? `<i data-lucide="loader-2" class="animate-spin w-6 h-6"></i>` : `<i data-lucide="languages" class="w-6 h-6"></i> Traduci`}
+            </button>
+          </div>
+          
+          ${state.transResult ? `
+            <div class="mt-8 bg-gray-900 p-8 rounded-[1.5rem] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-2xl animate-pop border border-gray-800">
+              <div>
+                 <span class="text-3xl md:text-4xl font-black text-white block mb-2" style="font-family: 'Noto Sans KR'">${state.transResult}</span>
+                 <span class="text-xl font-bold text-blue-300 tracking-wide">${state.transRomaji}</span>
+              </div>
+              <button onclick="window.playAudio(event, '${state.transResult}')" class="bg-blue-500 hover:bg-blue-400 shadow-lg text-white p-5 rounded-full transition-transform hover:scale-110 shrink-0 w-full md:w-auto flex justify-center">
+                <i data-lucide="volume-2" class="w-8 h-8"></i>
+              </button>
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="bg-gradient-to-r from-blue-400 to-pink-400 text-white rounded-[2.5rem] p-10 md:p-12 mb-12 shadow-xl text-center md:text-left relative overflow-hidden">
+          <i data-lucide="book-marked" class="absolute right-0 bottom-0 w-64 h-64 opacity-10 transform translate-x-10 translate-y-10"></i>
+          <h1 class="text-4xl md:text-5xl font-black mb-4 flex items-center justify-center md:justify-start gap-4 relative z-10">
+             Guida di Sopravvivenza 🎒
+          </h1>
+          <p class="text-blue-50 text-xl font-bold relative z-10">Queste parole coprono il 90% delle interazioni base in Corea.</p>
+        </div>
+        <div class="space-y-16">
+      `;
+
+      LIBRARY_DATA.forEach(section => {
+        let itemsHtml = section.items.map(item => `
+          <div class="bg-white p-8 rounded-[1.5rem] shadow-sm border-2 border-gray-50 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 hover:border-pink-100 transition-all group">
+            <div class="mb-4">
+              <div class="flex justify-between items-start mb-4 gap-4">
+                <div>
+                  <p class="text-3xl font-black text-gray-900 mb-2 group-hover:text-pink-600 transition-colors" style="font-family: 'Noto Sans KR'">${item.hangul}</p>
+                  <p class="text-sm font-black text-blue-500 uppercase tracking-widest">${item.romaji}</p>
+                </div>
+                <button onclick="window.playAudio(event, '${item.hangul}')" class="shrink-0 flex items-center justify-center gap-2 bg-gray-50 hover:bg-pink-50 border border-gray-200 hover:border-pink-200 text-gray-700 hover:text-pink-700 p-4 rounded-full transition-all shadow-sm">
+                  <i data-lucide="volume-2" class="w-6 h-6"></i>
+                </button>
+              </div>
+              <p class="text-gray-700 font-black text-xl mb-5">"${item.eng}"</p>
+              <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                <span class="text-[11px] font-black text-pink-500 uppercase tracking-widest block mb-2 flex items-center gap-1"><i data-lucide="info" class="w-4 h-4"></i> Nota</span>
+                <p class="text-gray-600 text-base font-bold leading-relaxed">${item.context}</p>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        html += `
+          <section>
+            <h2 class="text-3xl font-black text-gray-800 mb-8 flex items-center gap-3 border-b-4 border-gray-100 pb-4 inline-flex">
+              <div class="p-2 bg-gray-100 rounded-xl"><i data-lucide="${section.icon}" class="${section.iconColor} w-8 h-8"></i></div>
+              ${section.category}
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              ${itemsHtml}
+            </div>
+          </section>
+        `;
+      });
+
+      html += `</div></div>`;
+      return html;
+    };
+
+    const renderProfile = () => `
+      <div class="max-w-md mx-auto mt-10 md:mt-20 px-4 pb-20 animate-pop">
+        <div class="bg-white rounded-[3rem] korean-shadow p-10 border border-blue-50 text-center relative overflow-hidden">
+          
+          <div class="w-32 h-32 bg-pink-50 text-pink-600 rounded-full flex items-center justify-center mx-auto mb-8 border-8 border-white shadow-xl relative z-10">
+            <i data-lucide="user" class="w-16 h-16"></i>
+          </div>
+          <h2 class="text-4xl font-black text-gray-900 mb-2">Profilo Studente</h2>
+          <p class="text-gray-500 mb-12 font-bold text-lg">I tuoi progressi sono salvati automaticamente.</p>
+          
+          <div class="text-left mb-10">
+            <label class="block text-sm font-black text-gray-500 mb-3 uppercase tracking-widest">Il Tuo Nome</label>
+            <input 
+              type="text" 
+              value="${state.profileName}"
+              onchange="window.updateProfileName(this.value)"
+              class="w-full border-2 border-gray-200 rounded-2xl p-5 text-2xl font-black text-gray-800 focus:border-pink-500 outline-none transition-colors shadow-inner bg-gray-50 focus:bg-white"
+            />
+          </div>
+
+          <div class="bg-gray-900 p-8 rounded-3xl mb-12 flex justify-between items-center text-left shadow-xl">
+            <div>
+              <p class="text-gray-400 text-xs font-black uppercase tracking-widest mb-1">Giorni Completati</p>
+              <p class="text-5xl font-black text-pink-400">${state.completedDays.length}</p>
+            </div>
+            <i data-lucide="award" class="text-yellow-400 w-16 h-16"></i>
+          </div>
+
+          <button onclick="window.handleSwitchAccount()" class="w-full bg-white border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-800 py-5 rounded-2xl font-black text-lg shadow-sm transition-all flex justify-center items-center gap-3">
+            <i data-lucide="log-out" class="w-6 h-6"></i> Resetta Progressi
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Boot App
+    initApp();
+
+  </script>
+</body>
+</html>
