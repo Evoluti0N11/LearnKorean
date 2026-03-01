@@ -2,8 +2,11 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Annyeong Sara! Parla Coreano in 30 Giorni</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Annyeong Sara! Parla Coreano in 45 Giorni</title>
   
   <!-- Google Fonts for Professional Typography (Korean Support) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,11 +29,19 @@
       --korean-blue: #60a5fa; 
       --hanbok-cream: #fdfbf7;
     }
-    body { 
-      font-family: 'Nunito', 'Noto Sans KR', sans-serif; 
+    
+    /* Native App Feel for Mobile */
+    html, body {
+      overscroll-behavior-y: none;
+      -webkit-overflow-scrolling: touch;
       background-color: var(--hanbok-cream);
+      font-family: 'Nunito', 'Noto Sans KR', sans-serif;
+    }
+    
+    .bg-pattern {
       background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='#e2e8f0' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
+
     .pb-safe { padding-bottom: env(safe-area-inset-bottom, 24px); }
     .no-select { user-select: none; -webkit-user-select: none; }
     .hide-scroll::-webkit-scrollbar { display: none; }
@@ -80,21 +91,21 @@
     .animate-bounce-slow { animation: bounce 3s infinite; }
     
     .leaflet-container { font-family: 'Nunito', sans-serif; z-index: 10; border-radius: 2rem; }
-    .leaflet-popup-content-wrapper { border-radius: 1rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); padding: 5px; }
-    .leaflet-popup-content { margin: 10px 15px; }
+    .leaflet-popup-content-wrapper { border-radius: 1rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); padding: 0; overflow: hidden; }
+    .leaflet-popup-content { margin: 0; }
 
     /* Clickable Korean Words Styling */
     .korean-click {
       cursor: pointer;
       position: relative;
       display: inline-block;
-      border-bottom: 2px dashed #fbcfe8; /* pink-200 */
+      border-bottom: 2px dashed #fbcfe8;
       transition: all 0.2s;
     }
     .korean-click:hover {
-      color: #ec4899; /* pink-500 */
+      color: #ec4899; 
       border-bottom-color: #ec4899;
-      background-color: #fdf2f8; /* pink-50 */
+      background-color: #fdf2f8; 
       border-radius: 4px;
     }
     .korean-click::after {
@@ -108,7 +119,6 @@
     }
     .korean-click:hover::after { opacity: 1; }
 
-    /* Custom styles for modern details/summary (Accordion) */
     details > summary { list-style: none; cursor: pointer; }
     details > summary::-webkit-details-marker { display: none; }
     details[open] summary ~ * { animation: sweep .3s ease-in-out; }
@@ -118,9 +128,14 @@
     }
   </style>
 </head>
-<body class="text-slate-800 selection:bg-blue-200">
+<body class="text-slate-800 selection:bg-blue-200 h-[100dvh] w-screen overflow-hidden flex flex-col bg-pattern">
 
-  <div id="root"></div>
+  <div id="root" class="flex flex-col h-full w-full relative"></div>
+
+  <!-- Sshh... I codici di sblocco amministratori si nascondono qui dentro. Più avanti li useremo. -->
+  <script>
+    window._s_k_d = Array.from({length: 46}, (_, i) => btoa(`korea_${i}_sara_secret`).substring(0, 5).toUpperCase());
+  </script>
 
   <script type="module">
     let db, auth, doc, setDoc, onSnapshot, signOut, signInAnonymously, signInWithCustomToken;
@@ -141,6 +156,8 @@
       selectedAnswer: null,
       showFeedback: false,
       isRecording: false,
+      fallbackActive: false,
+      fallbackOptions: [],
       currentMistakes: [],
       transInput: '',
       transResult: '',
@@ -159,11 +176,10 @@
 
     // --- HELPER FOR CLICKABLE KOREAN ---
     window.renderHangul = (text) => {
-      // Wraps text in a span that plays audio when clicked
       return `<span class="korean-click" style="font-family: 'Noto Sans KR', sans-serif;" onclick="window.playAudio(event, '${text}')" title="Tocca per ascoltare la pronuncia">${text}</span>`;
     };
 
-    // --- DAY 1 TO 5: THE CORE FOUNDATION (EXPANDED) ---
+    // --- DAY 1 TO 5: THE CORE FOUNDATION ---
     const DETAILED_LESSONS = [
       {
         day: 1,
@@ -313,7 +329,7 @@
       }
     ];
 
-    // --- PROCEDURAL GENERATOR FOR DAYS 6-30 CON RIPASSO SPAZIATO ---
+    // --- PROCEDURAL GENERATOR FOR DAYS 6-45 ---
     const ADVANCED_TOPICS = [
       { name: "Caffetteria", hangul: "아이스 아메리카노 한 잔 주세요", romaji: "Aiseu amerikano han jan juseyo", eng: "Un Iced Americano, per favore", scenario: "Sei in un trendy cafe a Seongsu-dong.", clue: "한 잔 (han jan) = una tazza/bicchiere" },
       { name: "Wi-Fi e Internet", hangul: "와이파이 비밀번호가 뭐예요?", romaji: "Waipai bimilbeonhoga mwoyeyo?", eng: "Qual è la password del Wi-Fi?", scenario: "Vuoi postare su Instagram ma non hai rete.", clue: "비밀번호 (bimilbeonho) = password" },
@@ -323,7 +339,7 @@
       { name: "Emergenza Allergie", hangul: "견과류 알레르기가 있어요", romaji: "Gyeongwaryu allereugiga isseoyo", eng: "Ho un'allergia alla frutta secca", scenario: "Vuoi comprare un dolce in strada ma hai dubbi.", clue: "알레르기 (allereugi) = allergia" },
       { name: "Barbecue (K-BBQ)", hangul: "삼겹살 이 인분 주세요", romaji: "Samgyeopsal i inbun juseyo", eng: "Due porzioni di pancetta, per favore", scenario: "Sei seduta in un affollato ristorante di carne.", clue: "인분 (inbun) = porzione a persona" },
       { name: "Barbecue Pro", hangul: "불판 좀 갈아주세요", romaji: "Bulpan jom garajuseyo", eng: "Può cambiare la piastra, per favore?", scenario: "La carne ha annerito la griglia.", clue: "갈다 (galda) = cambiare/sostituire" },
-      { name: "Fare Amicizia (Età)", hangul: "몇 살이에요?", romaji: "Myeot sarieyo?", eng: "Quanti anni hai?", scenario: "Vuoi scoprire se la persona che hai di fronte è più grande o piccola (Oppa/Unnie).", clue: "살 (sal) = anni d'età" },
+      { name: "Fare Amicizia (Età)", hangul: "몇 살이에요?", romaji: "Myeot sarieyo?", eng: "Quanti anni hai?", scenario: "Vuoi scoprire se la persona che hai di fronte è più grande o piccola.", clue: "살 (sal) = anni d'età" },
       { name: "Parlar di K-Drama! 📺", hangul: "스물다섯 스물하나 봤어요?", romaji: "Seumuldaseot seumulhana bwasseoyo?", eng: "Hai visto Twenty Five Twenty One?", scenario: "Vuoi parlare della tua serie preferita con una ragazza coreana.", clue: "봤어요? (bwasseoyo) = Hai visto/guardato?" },
       { name: "Passioni", hangul: "취미가 뭐예요?", romaji: "Chwimiga mwoyeyo?", eng: "Qual è il tuo hobby?", scenario: "Cerchi argomenti di conversazione al pub.", clue: "취미 (chwimi) = hobby" },
       { name: "Small Talk: Il Meteo", hangul: "오늘 날씨가 정말 좋네요", romaji: "Oneul nalssiga jeongmal jonneyo", eng: "Il tempo è davvero bello oggi", scenario: "Aspetti l'autobus insieme a una signora.", clue: "날씨 (nalssi) = meteo" },
@@ -339,22 +355,33 @@
       { name: "Al Pub", hangul: "건배!", romaji: "Geonbae!", eng: "Salute! / Brindisi!", scenario: "I tuoi nuovi amici hanno appena versato il Soju a tutti.", clue: "건배 (geonbae) = brindisi (vuotare il bicchiere)" },
       { name: "Chiamata Telefonica", hangul: "여보세요?", romaji: "Yeoboseyo?", eng: "Pronto?", scenario: "Rispondi al telefono dell'hotel.", clue: "Si usa *solo ed esclusivamente* al telefono." },
       { name: "Scuse Serie", hangul: "제 잘못입니다", romaji: "Je jalmosimnida", eng: "È colpa mia", scenario: "Hai combinato un guaio serio, una normale 'Scusa' non basta.", clue: "잘못 (jalmot) = errore / colpa" },
-      { name: "Saluti tra Amici", hangul: "나중에 봐요!", romaji: "Najunge bwayo!", eng: "Ci vediamo dopo!", scenario: "Saluti una persona della tua stessa età in modo allegro.", clue: "나중에 (najunge) = più tardi" }
+      { name: "Saluti tra Amici", hangul: "나중에 봐요!", romaji: "Najunge bwayo!", eng: "Ci vediamo dopo!", scenario: "Saluti una persona della tua stessa età in modo allegro.", clue: "나중에 (najunge) = più tardi" },
+      // Estensioni Giorni 31-45
+      { name: "Al Salone di Bellezza", hangul: "머리 다듬어 주세요", romaji: "Meori dadeumeo juseyo", eng: "Mi spunti i capelli, per favore", scenario: "Sei in un parrucchiere a Gangnam.", clue: "머리 (meori) = testa/capelli" },
+      { name: "In Farmacia (Dettagliato)", hangul: "소화제 있어요?", romaji: "Sohwaje isseoyo?", eng: "Avete qualcosa per la digestione?", scenario: "Hai mangiato troppo piccante e serve aiuto.", clue: "소화제 (sohwaje) = digestivo" },
+      { name: "Al Noraebang (Karaoke)", hangul: "한 곡 더 부를까요?", romaji: "Han gok deo bureulkkayo?", eng: "Cantiamo un'altra canzone?", scenario: "Siete al karaoke e l'atmosfera è al top.", clue: "부르다 (bureuda) = cantare" },
+      { name: "Sentimenti & Amicizia", hangul: "보고 싶어요", romaji: "Bogo sipeoyo", eng: "Mi manchi / Voglio vederti", scenario: "Scrivi un messaggio a un amico lontano.", clue: "보고 싶다 (bogo sipda) = mancare/voler vedere" },
+      { name: "Incontri Romantici", hangul: "주말에 시간 있어요?", romaji: "Jumare sigan isseoyo?", eng: "Hai tempo questo fine settimana?", scenario: "Vuoi invitare fuori qualcuno o combinare un'uscita.", clue: "주말 (jumal) = fine settimana" },
+      { name: "All'Ufficio Postale", hangul: "이탈리아로 보내고 싶어요", romaji: "Italliaro bonaego sipeoyo", eng: "Voglio spedire questo in Italia", scenario: "Spedisci souvenir pesanti a casa.", clue: "보내다 (bonaeda) = mandare/spedire" },
+      { name: "Emergenza Banca", hangul: "환전하고 싶어요", romaji: "Hwanjeonhago sipeoyo", eng: "Voglio cambiare dei soldi", scenario: "Sei a Myeongdong per scambiare Euro in Won.", clue: "환전 (hwanjeon) = cambio valuta" },
+      { name: "Dispiacere Formalissimo", hangul: "유감입니다", romaji: "Yugamimnida", eng: "Mi dispiace (per la situazione)", scenario: "Un conoscente ti racconta una cosa triste, mostri empatia.", clue: "유감 (yugam) = dispiacere/rammarico (formale)" },
+      { name: "Complimenti Estremi", hangul: "대박!", romaji: "Daebak!", eng: "Incredibile! / Wow!", scenario: "Vedi un'esibizione K-Pop per strada e resti a bocca aperta.", clue: "대박 (daebak) = grande successo/wow" },
+      { name: "Frustrazione Quotidiana", hangul: "진짜 짜증나요", romaji: "Jinjja jjajeungnayo", eng: "È davvero fastidioso/snervante", scenario: "Perdi il treno per un secondo sotto la pioggia.", clue: "짜증나다 (jjajeungnada) = essere irritato" },
+      { name: "Incoraggiamento", hangul: "포기하지 마세요", romaji: "Pogihaji maseyo", eng: "Non arrenderti", scenario: "Il tuo amico studia per un esame difficile.", clue: "포기하다 (pogihada) = arrendersi" },
+      { name: "Permessi in Pubblico", hangul: "여기 앉아도 돼요?", romaji: "Yeogi anjado dwaeyo?", eng: "Posso sedermi qui?", scenario: "Caffetteria affollata, c'è un posto libero al tavolo grande.", clue: "앉다 (anda) = sedersi" },
+      { name: "Sorprese", hangul: "깜짝이야!", romaji: "Kkamjjagiya!", eng: "Che spavento!", scenario: "Qualcuno ti sorprende alle spalle o c'è un rumore forte.", clue: "Espressione idiomatica comunissima." },
+      { name: "Sopravvivenza Estiva", hangul: "에어컨 좀 켜주세요", romaji: "Eeokeon jom kyeojuseyo", eng: "Può accendere l'aria condizionata?", scenario: "Estate afosa in taxi a 35 gradi.", clue: "켜다 (kyeoda) = accendere" },
+      { name: "Fame Nera", hangul: "배고파 죽겠어요", romaji: "Baegopa jukgesseoyo", eng: "Muoio di fame", scenario: "Hai saltato il pranzo ed è il momento del Korean BBQ.", clue: "죽겠다 (jukgetda) = morire (usato come esagerazione: muoio di...)" }
     ];
 
     const generateFullMonth = () => {
       const fullCourse = [...DETAILED_LESSONS];
       
-      for (let i = 6; i <= 30; i++) {
-        // Cycle through the advanced topics
+      for (let i = 6; i <= 45; i++) {
         const t = ADVANCED_TOPICS[i - 6];
-        
         let dailyExercises = [];
 
-        // Genera 20 esercizi per raggiungere 25-30 min:
-        // Cicli di 4 esercizi tematici, poi 1 ripasso casuale
         for (let round = 0; round < 4; round++) {
-            // 1. Translation / Meaning (Input)
             dailyExercises.push({
               type: 'multiple_choice',
               question: `Situazione: ${t.scenario}. Cosa significa "${t.romaji}"?`,
@@ -365,7 +392,6 @@
               tip: `Ricorda: ${t.clue}`
             });
 
-            // 2. Listening Focus
             dailyExercises.push({
               type: 'listen',
               question: "Ascolta questa espressione utilissima. Cerca di memorizzare il suono.",
@@ -376,7 +402,6 @@
               tip: "Ascoltare più volte aiuta il cervello a mappare la fonetica coreana."
             });
 
-            // 3. Pronunciation Practice
             dailyExercises.push({
               type: 'speak',
               question: `Pronuncia: Dì '${t.eng}' in Coreano.`,
@@ -387,7 +412,6 @@
               tip: "Non avere paura di sbagliare l'accento."
             });
 
-            // 4. Conversation Application
             dailyExercises.push({
               type: 'conversation',
               context: `Ricorda la parola chiave: ${t.clue}`,
@@ -399,7 +423,6 @@
               tip: `Usa ${t.romaji} nel contesto giusto per non sembrare fuori luogo.`
             });
 
-            // 5. SPACED REPETITION (Ripasso giorni 1-5 o vecchi)
             const randomDayNum = Math.floor(Math.random() * Math.min(i - 1, 5)) + 1; 
             const pastDay = fullCourse.find(d => d.day === randomDayNum);
             const reviewExs = pastDay.exercises.filter(ex => ex.type === 'multiple_choice' || ex.type === 'listen');
@@ -417,8 +440,8 @@
           title: `Giorno ${i}: ${t.name}`,
           topic: "Conversazione",
           theory: {
-            intro: `Benvenuta al Giorno ${i}, Sara! Oggi affrontiamo uno scenario essenziale: "${t.name}". Impareremo una frase nuova e faremo tanto ripasso attivo delle lezioni vecchie.`,
-            concept: `Studia bene la frase chiave. Negli esercizi troverai domande ripetitive su di essa (per fissarla nel cervello) e quiz a sorpresa presi dai Giorni 1-5!`,
+            intro: `Benvenuta al Giorno ${i}, Sara! Oggi affrontiamo uno scenario essenziale: "${t.name}". Impareremo una frase nuova e faremo tanto ripasso attivo.`,
+            concept: `Studia bene la frase chiave. Negli esercizi troverai domande ripetitive su di essa (per fissarla nel cervello) e quiz a sorpresa presi dai Giorni passati!`,
             examples: [{ hangul: t.hangul, romaji: t.romaji, eng: t.eng, context: "Frase Focus del Giorno ✨" }],
             culture: t.clue
           },
@@ -521,24 +544,24 @@
     ];
 
     const MAP_REGIONS = [
-      { name: "Palazzo Gyeongbokgung (Seoul)", icon: "🏯", emoji: "🤴", desc: "Il palazzo reale più iconico della Corea. Indossa l'Hanbok (abito tradizionale) per entrare gratis!", keywords: ["Storia", "Hanbok", "Seoul Tour"], lat: 37.5796, lng: 126.9770 },
-      { name: "N Seoul Tower (Namsan)", icon: "🗼", emoji: "🌇", desc: "Il punto panoramico più alto di Seoul, famoso per la funivia e le recinzioni piene di lucchetti dell'amore.", keywords: ["Seoul", "Panorama", "Romance"], lat: 37.5512, lng: 126.9882 },
-      { name: "Bukchon Hanok Village (Seoul)", icon: "🏘️", emoji: "🏮", desc: "Un villaggio tradizionale nel cuore della città moderna, perfetto per passeggiate e foto tra case storiche (Hanok).", keywords: ["Tradizione", "Foto", "Hanok"], lat: 37.5826, lng: 126.9836 },
-      { name: "Spiaggia di Haeundae (Busan)", icon: "🏖️", emoji: "🏄‍♀️", desc: "La spiaggia più famosa della Corea, nota per l'atmosfera estiva, il mercato del pesce e i grattacieli sul mare.", keywords: ["Busan", "Mare", "Relax"], lat: 35.1587, lng: 129.1604 },
-      { name: "Gamcheon Culture Village (Busan)", icon: "🎨", emoji: "🖌️", desc: "Conosciuto come il 'Machu Picchu di Busan', è un labirinto coloratissimo di case e opere di street art in collina.", keywords: ["Busan", "Arte", "Colori"], lat: 35.0975, lng: 129.0106 },
-      { name: "Tempio di Bulguksa (Gyeongju)", icon: "🛕", emoji: "🙏", desc: "Patrimonio mondiale UNESCO. Situato nell'antica capitale del regno di Silla, un capolavoro assoluto dell'arte buddista.", keywords: ["Gyeongju", "Storia", "Tempio"], lat: 35.7900, lng: 129.3320 },
-      { name: "Isola di Jeju (Monte Hallasan)", icon: "🌋", emoji: "🍊", desc: "Le Hawaii della Corea. Un'isola vulcanica famosa per la natura, le cascate, i mandarini succosi e le statue in pietra (Harubang).", keywords: ["Jeju", "Natura", "Vacanze"], lat: 33.3617, lng: 126.5292 },
-      { name: "Daehak-ro Park (Seoul - 2521)", icon: "🏙️", emoji: "🎭", desc: "Al Marronnier Park (Daehak-ro 8-gil) hanno girato la scena in cui Yi-jin e Hee-do passeggiano nel caos cittadino in '2521'.", keywords: ["Seoul", "2521", "Arte"], lat: 37.5821, lng: 127.0021 },
-      { name: "Casa di Na Hee-do (Jeonju)", icon: "🏠", emoji: "🤺", desc: "5-19 Omokdae-gil, Jeonju. La famosa casa in salita dove Yi-jin le lasciava il giornale e la rosa rossa.", keywords: ["2521", "Nostalgia", "Jeonju"], lat: 35.8145, lng: 127.1522 },
-      { name: "Tunnel Hanbyeokgul (Jeonju)", icon: "🚇", emoji: "🏃‍♀️", desc: "San 7-3 Gyo-dong. L'iconico tunnel in mattoni dove Hee-do e Yi-jin scappano correndo nella notte.", keywords: ["2521", "Fuga", "Romance"], lat: 35.8105, lng: 127.1585 },
-      { name: "Fumetteria Myeongjin (Jeonju)", icon: "📚", emoji: "📖", desc: "59 Seohak-ro, Jeonju. L'esterno della fumetteria (oggi Sound of Magic) dove Yi-jin lavorava part-time.", keywords: ["2521", "Full House", "Yi-jin"], lat: 35.8115, lng: 127.1485 },
-      { name: "Spiaggia di Geumjin (Gangwon)", icon: "🌊", emoji: "📸", desc: "Il luogo dello stupendo e nostalgico viaggio estivo della squadra di 2521. 'Questa estate è nostra!'", keywords: ["2521", "Amici", "Estate"], lat: 37.6450, lng: 129.0436 }
+      { name: "Palazzo Gyeongbokgung (Seoul)", image: "https://images.unsplash.com/photo-1546874177-9e664107314e?w=600&q=80", icon: "🏯", emoji: "🤴", desc: "Il palazzo reale più iconico della Corea. Indossa l'Hanbok (abito tradizionale) per entrare gratis!", keywords: ["Storia", "Hanbok", "Seoul Tour"], lat: 37.5796, lng: 126.9770 },
+      { name: "N Seoul Tower (Namsan)", image: "https://images.unsplash.com/photo-1538669715315-13efabec2426?w=600&q=80", icon: "🗼", emoji: "🌇", desc: "Il punto panoramico più alto di Seoul, famoso per la funivia e le recinzioni piene di lucchetti dell'amore.", keywords: ["Seoul", "Panorama", "Romance"], lat: 37.5512, lng: 126.9882 },
+      { name: "Bukchon Hanok Village", image: "https://images.unsplash.com/photo-1588665426002-3151eb9d7bd0?w=600&q=80", icon: "🏘️", emoji: "🏮", desc: "Un villaggio tradizionale nel cuore della città moderna, perfetto per passeggiate e foto tra case storiche (Hanok).", keywords: ["Tradizione", "Foto", "Hanok"], lat: 37.5826, lng: 126.9836 },
+      { name: "Spiaggia di Haeundae (Busan)", image: "https://images.unsplash.com/photo-1620023602164-96c21b5b4a07?w=600&q=80", icon: "🏖️", emoji: "🏄‍♀️", desc: "La spiaggia più famosa della Corea, nota per l'atmosfera estiva, il mercato del pesce e i grattacieli sul mare.", keywords: ["Busan", "Mare", "Relax"], lat: 35.1587, lng: 129.1604 },
+      { name: "Gamcheon Culture Village", image: "https://images.unsplash.com/photo-1598501168128-40b9914b434b?w=600&q=80", icon: "🎨", emoji: "🖌️", desc: "Conosciuto come il 'Machu Picchu di Busan', è un labirinto coloratissimo di case e opere di street art in collina.", keywords: ["Busan", "Arte", "Colori"], lat: 35.0975, lng: 129.0106 },
+      { name: "Tempio di Bulguksa", image: "https://images.unsplash.com/photo-1647247714150-13d8032c5f11?w=600&q=80", icon: "🛕", emoji: "🙏", desc: "Patrimonio mondiale UNESCO. Situato nell'antica capitale del regno di Silla, un capolavoro assoluto dell'arte buddista.", keywords: ["Gyeongju", "Storia", "Tempio"], lat: 35.7900, lng: 129.3320 },
+      { name: "Isola di Jeju", image: "https://images.unsplash.com/photo-1590403328570-0715697204ea?w=600&q=80", icon: "🌋", emoji: "🍊", desc: "Le Hawaii della Corea. Un'isola vulcanica famosa per la natura, le cascate, i mandarini succosi e le statue in pietra.", keywords: ["Jeju", "Natura", "Vacanze"], lat: 33.3617, lng: 126.5292 },
+      { name: "Daehak-ro Park (2521)", image: "https://images.unsplash.com/photo-1590596395261-2b0eecabdbcd?w=600&q=80", icon: "🏙️", emoji: "🎭", desc: "Al Marronnier Park hanno girato la scena in cui Yi-jin e Hee-do passeggiano nel caos cittadino in '2521'.", keywords: ["Seoul", "2521", "Arte"], lat: 37.5821, lng: 127.0021 },
+      { name: "Casa di Na Hee-do", image: "https://images.unsplash.com/photo-1582200288849-011400e2a2ba?w=600&q=80", icon: "🏠", emoji: "🤺", desc: "5-19 Omokdae-gil, Jeonju. La famosa casa in salita dove Yi-jin le lasciava il giornale e la rosa rossa.", keywords: ["2521", "Nostalgia", "Jeonju"], lat: 35.8145, lng: 127.1522 },
+      { name: "Tunnel Hanbyeokgul", image: "https://images.unsplash.com/photo-1621213346590-fba8d6978411?w=600&q=80", icon: "🚇", emoji: "🏃‍♀️", desc: "L'iconico tunnel in mattoni dove Hee-do e Yi-jin scappano correndo nella notte, urlando per la libertà.", keywords: ["2521", "Fuga", "Romance"], lat: 35.8105, lng: 127.1585 },
+      { name: "Fumetteria Myeongjin", image: "https://images.unsplash.com/photo-1510006847844-3c81e7d23f79?w=600&q=80", icon: "📚", emoji: "📖", desc: "59 Seohak-ro, Jeonju. L'esterno della fumetteria (oggi Sound of Magic) dove Yi-jin lavorava part-time.", keywords: ["2521", "Full House", "Yi-jin"], lat: 35.8115, lng: 127.1485 },
+      { name: "Spiaggia di Geumjin", image: "https://images.unsplash.com/photo-1615566373180-8772922129ba?w=600&q=80", icon: "🌊", emoji: "📸", desc: "Il luogo dello stupendo e nostalgico viaggio estivo della squadra di 2521. 'Questa estate è nostra!'", keywords: ["2521", "Amici", "Estate"], lat: 37.6450, lng: 129.0436 }
     ];
 
-    // --- LOGIC & LOCAL SAVE (IMPROVED) ---
+    // --- LOGIC & LOCAL SAVE ---
     const loadLocalProgress = () => {
       try {
-        const saved = localStorage.getItem('sara_korean_save');
+        const saved = localStorage.getItem('sara_korean_save_v2');
         if (saved) {
           const data = JSON.parse(saved);
           state.completedDays = data.completedDays || [];
@@ -548,17 +571,17 @@
       } catch(e) { console.error("Local storage error", e); }
     };
 
-    const showSaveToast = () => {
+    const showSaveToast = (msg = "Progressi Salvati, Sara!") => {
       const toast = document.createElement('div');
-      toast.className = 'fixed top-5 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-6 py-3 rounded-full shadow-2xl z-[100] transition-all duration-300 text-sm font-bold flex items-center gap-2 animate-pop border border-blue-400';
-      toast.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-white"></i> Progressi Salvati, Sara!`;
+      toast.className = 'fixed top-5 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-6 py-3 rounded-full shadow-2xl z-[10000] transition-all duration-300 text-sm font-bold flex items-center gap-2 animate-pop border border-blue-400';
+      toast.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-white"></i> ${msg}`;
       document.body.appendChild(toast);
       lucide.createIcons();
       setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.transform = 'translate(-50%, -20px)';
         setTimeout(() => toast.remove(), 300);
-      }, 2000);
+      }, 2500);
     };
 
     const initApp = async () => {
@@ -628,7 +651,7 @@
           }, { merge: true });
         } catch (e) { console.error("Failed to save:", e); }
       } else {
-        localStorage.setItem('sara_korean_save', JSON.stringify({
+        localStorage.setItem('sara_korean_save_v2', JSON.stringify({
           completedDays: newCompleted,
           mistakesRecord: newMistakes,
           profileName: state.profileName
@@ -637,16 +660,28 @@
       }
     };
 
-    // --- SECRET MENU PER RIPRISTINO CACHE (Per problemi Chrome Mobile) ---
-    window.secretRestore = () => {
-        let num = prompt("🌸 Menu Segreto (Antipanico)! Se hai perso i salvataggi, scrivi a quale giorno (1-30) vuoi tornare:");
-        if(num && !isNaN(num) && num > 0 && num <= 30) {
-            let days = [];
-            for(let i=1; i<num; i++) days.push(i);
-            state.completedDays = days;
-            saveProgress(days, state.mistakesRecord);
-            renderApp();
-            alert("✨ Magia! Progressi ripristinati al Giorno " + num + ".");
+    // --- SECRET UNLOCK FEATURE ---
+    window.unlockDayWithCode = (code) => {
+        if(!code || code.length < 4) return;
+        const upperCode = code.toUpperCase().trim();
+        const foundDayIndex = window._s_k_d.indexOf(upperCode);
+        
+        if(foundDayIndex > 0 && foundDayIndex <= 45) {
+            if(!state.completedDays.includes(foundDayIndex)) {
+                const newDays = [...state.completedDays];
+                for(let i=1; i<=foundDayIndex; i++) {
+                   if(!newDays.includes(i)) newDays.push(i);
+                }
+                state.completedDays = newDays;
+                saveProgress(newDays, state.mistakesRecord);
+                showSaveToast(`Livello ${foundDayIndex} sbloccato! Magia! ✨`);
+                document.getElementById('unlockCodeInput').value = '';
+                renderApp();
+            } else {
+                alert("Hai già sbloccato questo livello!");
+            }
+        } else {
+            alert("Codice Segreto non valido o inesistente. Riprova!");
         }
     };
 
@@ -655,7 +690,6 @@
       if (e) { e.stopPropagation(); e.preventDefault(); }
       if (!textHangul) return;
       
-      // Clean HTML tags if any passed accidentally
       const cleanText = textHangul.replace(/<[^>]*>?/gm, '');
 
       if ('speechSynthesis' in window) {
@@ -735,7 +769,6 @@
             myMap = null;
         }
 
-        // Center the map covering main Korea spots
         myMap = L.map('korea-map', {
             zoomControl: false,
             scrollWheelZoom: false 
@@ -760,12 +793,14 @@
             const marker = L.marker([region.lat, region.lng], {icon: icon}).addTo(myMap);
             
             marker.bindPopup(`
-                <div class="p-2 text-center min-w-[200px]">
-                    <h3 class="font-black text-lg text-gray-800 mb-1">${region.name}</h3>
-                    <div class="text-3xl mb-2">${region.emoji}</div>
-                    <p class="text-sm font-bold text-gray-600 mb-3">${region.desc}</p>
-                    <div class="flex flex-wrap justify-center gap-1">
-                        ${region.keywords.map(kw => `<span class="bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black uppercase">${kw}</span>`).join('')}
+                <div class="p-0 text-center min-w-[240px] flex flex-col items-center">
+                    <img src="${region.image}" alt="${region.name}" class="w-full h-32 object-cover rounded-t-xl mb-3 shadow-sm border-b-2 border-pink-100" />
+                    <div class="px-3 pb-3">
+                      <h3 class="font-black text-lg text-gray-800 mb-1 leading-tight">${region.name}</h3>
+                      <p class="text-xs font-bold text-gray-600 mb-3">${region.desc}</p>
+                      <div class="flex flex-wrap justify-center gap-1">
+                          ${region.keywords.map(kw => `<span class="bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-black uppercase">${kw}</span>`).join('')}
+                      </div>
                     </div>
                 </div>
             `);
@@ -786,6 +821,7 @@
       state.combo = 0;
       state.selectedAnswer = null;
       state.showFeedback = false;
+      state.fallbackActive = false;
       state.currentMistakes = [];
       renderApp();
     };
@@ -817,6 +853,48 @@
       renderApp();
     };
 
+    // --- FALLBACK VOCALE (QUIZ FONETICO) ---
+    window.triggerSpeechFallback = () => {
+        if(speechTimeout) clearTimeout(speechTimeout);
+        state.isRecording = false;
+        state.fallbackActive = true;
+        
+        const ex = COURSE_DATA.find(d => d.day === state.activeDay).exercises[state.gameStep];
+        const correct = ex.expectedRomaji[0];
+        
+        // Genera distrattori credibili ma palesemente errati
+        const opt1 = correct.replace(/[aeiou]/g, (m) => m==='a'?'e':m==='e'?'i':m==='i'?'o':m==='o'?'u':'a');
+        const opt2 = correct.replace(/k|g|t|d|p|b|j/g, (m) => m==='k'?'g':m==='g'?'k':m==='t'?'d':m==='d'?'t':m==='p'?'b':'p').replace(/[aeiou]/g, 'a');
+        
+        const options = [correct, opt1, opt2];
+        state.fallbackOptions = options.sort(() => Math.random() - 0.5);
+        renderApp();
+    };
+
+    window.handleFallbackAnswer = (index) => {
+       if (state.showFeedback) return;
+       const ex = COURSE_DATA.find(d => d.day === state.activeDay).exercises[state.gameStep];
+       const correct = ex.expectedRomaji[0];
+       const isCorrect = state.fallbackOptions[index] === correct;
+       
+       if(isCorrect) {
+          // Play l'audio esatto prima di procedere, come richiesto!
+          window.playAudio(null, ex.expectedHangul[0]);
+          state.selectedAnswer = true;
+          state.score += 1;
+          state.combo += 1;
+          state.showFeedback = true;
+          ex.feedback_incorrect = "Bravissima! L'audio che hai appena sentito è la pronuncia esatta. L'Hai riconosciuta perfettamente.";
+       } else {
+          state.selectedAnswer = false;
+          state.combo = 0;
+          state.currentMistakes.push(ex.conceptTag);
+          state.showFeedback = true;
+          ex.feedback_incorrect = `Quella non era la pronuncia esatta. La romanizzazione corretta era: "${correct}". Ascoltala bene la prossima volta!`;
+       }
+       renderApp();
+    };
+
     // BUG FIX PER MICROFONO ANDROID CHROME
     window.handleSpeechRecognition = (e) => {
       if (e) e.preventDefault();
@@ -824,8 +902,7 @@
 
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        alert("Sara, questo browser non supporta il microfono per l'AI. Puoi usare il tasto Salta e proseguire in totale relax!");
-        window.skipSpeechExercise();
+        window.triggerSpeechFallback();
         return;
       }
 
@@ -838,16 +915,11 @@
       state.isRecording = true;
       renderApp();
 
-      // Implementazione Timeout di sicurezza (7 sec) per Chrome Android bug
+      // Implementazione Timeout di sicurezza (7 sec) -> Passa al Fallback
       speechTimeout = setTimeout(() => {
           if (state.isRecording) {
               recognition.stop();
-              state.isRecording = false;
-              const exercise = COURSE_DATA.find(d => d.day === state.activeDay).exercises[state.gameStep];
-              exercise.feedback_incorrect = "Non ho sentito nulla o c'è un blocco del microfono su Android. Riprova, oppure salta senza perdere la combo!";
-              state.showFeedback = true;
-              state.selectedAnswer = false; 
-              renderApp();
+              window.triggerSpeechFallback();
           }
       }, 7000);
 
@@ -881,37 +953,20 @@
 
       recognition.onerror = (event) => {
         clearTimeout(speechTimeout);
-        state.isRecording = false;
-        state.showFeedback = true;
-        state.selectedAnswer = false; 
-        state.combo = 0;
-        
-        const exercise = COURSE_DATA.find(d => d.day === state.activeDay).exercises[state.gameStep];
-        
-        if (event.error === 'not-allowed') {
-          exercise.feedback_incorrect = "Microfono bloccato! Vai nei permessi di Chrome per attivarlo, oppure usa il tasto 'Salta'.";
-        } else if (event.error === 'no-speech') {
-          exercise.feedback_incorrect = "Non ho sentito nulla. C'è molto rumore, hai parlato troppo piano, o il browser sta bloccando l'audio.";
-        } else { 
-          exercise.feedback_incorrect = "Errore di connessione audio (" + event.error + "). Sentiti libera di saltare.";
+        if(event.error === 'not-allowed' || event.error === 'no-speech') {
+            window.triggerSpeechFallback();
+        } else {
+            state.isRecording = false;
+            state.showFeedback = true;
+            state.selectedAnswer = false; 
+            state.combo = 0;
+            const exercise = COURSE_DATA.find(d => d.day === state.activeDay).exercises[state.gameStep];
+            exercise.feedback_incorrect = "Errore di connessione audio (" + event.error + "). Passa al prossimo.";
+            renderApp();
         }
-        renderApp();
       };
       
-      try { recognition.start(); } catch(err) { clearTimeout(speechTimeout); window.skipSpeechExercise(); }
-    };
-
-    window.skipSpeechExercise = () => {
-        // Un modo sicuro per non bloccare Sara se l'API del browser fa i capricci
-        if(speechTimeout) clearTimeout(speechTimeout);
-        state.isRecording = false;
-        const exercise = COURSE_DATA.find(d => d.day === state.activeDay).exercises[state.gameStep];
-        
-        // Simulo una risposta errata per permettere il passaggio, ma senza far scendere l'umore!
-        state.selectedAnswer = false;
-        state.showFeedback = true;
-        exercise.feedback_incorrect = "Esercizio saltato correttamente. L'importante è aver letto la parola mentalmente!";
-        renderApp();
+      try { recognition.start(); } catch(err) { clearTimeout(speechTimeout); window.triggerSpeechFallback(); }
     };
 
     window.nextQuestion = () => {
@@ -920,6 +975,8 @@
         state.gameStep += 1;
         state.selectedAnswer = null;
         state.showFeedback = false;
+        state.fallbackActive = false;
+        state.fallbackOptions = [];
       } else {
         const newCompleted = state.completedDays.includes(state.activeDay) ? state.completedDays : [...state.completedDays, state.activeDay];
         const newMistakes = { ...state.mistakesRecord, [state.activeDay]: state.currentMistakes };
@@ -945,7 +1002,7 @@
         if (useFirebase && state.user && state.user.uid !== 'local-user') {
           await signOut(auth);
         } else {
-          localStorage.removeItem('sara_korean_save');
+          localStorage.removeItem('sara_korean_save_v2');
         }
         state.completedDays = [];
         state.mistakesRecord = {};
@@ -960,7 +1017,7 @@
       const root = document.getElementById('root');
       
       if (state.isAuthLoading) {
-        root.innerHTML = `<div class="min-h-screen flex items-center justify-center text-blue-500"><i data-lucide="loader-2" class="animate-spin w-12 h-12"></i></div>`;
+        root.innerHTML = `<div class="h-full w-full flex items-center justify-center text-blue-500"><i data-lucide="loader-2" class="animate-spin w-12 h-12"></i></div>`;
         lucide.createIcons();
         return;
       }
@@ -975,10 +1032,12 @@
       else if (state.currentView === 'profile') content = renderProfile();
 
       root.innerHTML = `
-        ${renderNav()}
-        <main class="p-4 md:p-8 pt-4 md:pt-8 pb-32 md:pb-12 max-w-[100vw] overflow-x-hidden">
-          ${content}
+        <main class="flex-1 overflow-y-auto overscroll-y-contain w-full pb-20 md:pb-0">
+            <div class="max-w-[100vw] mx-auto p-4 md:p-8 pt-4 md:pt-8 w-full relative">
+                ${content}
+            </div>
         </main>
+        ${renderNav()}
       `;
       lucide.createIcons();
 
@@ -989,7 +1048,7 @@
 
     const renderNav = () => {
       return `
-        <nav class="fixed bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-blue-100 pb-safe md:relative md:border-b md:border-t-0 z-[9999] shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.05)]">
+        <nav class="fixed bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-blue-100 pb-safe z-[9999] shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] md:relative md:border-b md:border-t-0 flex-shrink-0">
           <div class="max-w-4xl mx-auto flex justify-between md:justify-center md:gap-16 px-4 py-3 md:p-5">
             <button onclick="window.changeView('dashboard')" class="flex flex-col items-center gap-1 transition-all ${state.currentView === 'dashboard' ? 'text-pink-500 scale-110' : 'text-gray-400 hover:text-blue-500'}">
               <i data-lucide="map-pin" class="w-7 h-7"></i>
@@ -1013,10 +1072,10 @@
     };
 
     const renderDashboard = () => {
-      const totalProgress = Math.min((state.completedDays.length / 30) * 100, 100);
+      const totalProgress = Math.min((state.completedDays.length / 45) * 100, 100);
 
       let html = `
-      <div class="max-w-4xl mx-auto pb-20 relative">
+      <div class="max-w-4xl mx-auto relative">
         <div class="hangul-watermark">가자</div>
         
         <header class="bg-gradient-to-br from-pink-400 via-pink-300 to-blue-400 text-white rounded-[2rem] p-8 md:p-10 mb-8 korean-shadow flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
@@ -1024,8 +1083,8 @@
              <i data-lucide="sparkles" class="w-48 h-48"></i>
           </div>
           <div class="z-10">
-            <h1 class="text-4xl md:text-5xl font-black mb-3 tracking-tight cursor-pointer no-select" onclick="window.secretRestore()" title="Doppio clic segreto per ripristinare la memoria!">Annyeong, ${state.profileName}! 🌸</h1>
-            <p class="text-pink-50 text-xl font-bold mb-4">Il tuo percorso intensivo per parlare Coreano in Corea in 30 giorni.</p>
+            <h1 class="text-4xl md:text-5xl font-black mb-3 tracking-tight no-select">Annyeong, ${state.profileName}! 🌸</h1>
+            <p class="text-pink-50 text-xl font-bold mb-4">Il tuo percorso intensivo per parlare Coreano in Corea in 45 giorni.</p>
             
             <div class="w-full max-w-md bg-white/20 h-4 rounded-full overflow-hidden backdrop-blur-sm border border-white/30">
                <div class="bg-white h-full transition-all duration-1000" style="width: ${totalProgress}%"></div>
@@ -1036,7 +1095,7 @@
           <div class="flex gap-4 w-full md:w-auto z-10">
             <div class="flex-1 md:flex-none flex flex-col items-center justify-center bg-white/20 p-4 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner">
               <i data-lucide="award" class="text-yellow-300 mb-1 w-8 h-8"></i>
-              <span class="font-black text-sm">${state.completedDays.length} / 30 Giorni</span>
+              <span class="font-black text-sm">${state.completedDays.length} / 45 Giorni</span>
             </div>
           </div>
         </header>
@@ -1047,7 +1106,7 @@
               <i data-lucide="map" class="text-blue-400 w-8 h-8"></i> Syllabus Formativo 🗺️
             </h2>
           </div>
-          <p class="text-gray-500 mb-10 font-bold text-lg">Dedicaci 25-30 minuti al giorno per affrontare ~20 esercizi pratici a lezione. Il "Ripasso Dinamico" è attivo nelle lezioni avanzate!</p>
+          <p class="text-gray-500 mb-10 font-bold text-lg">Dedicaci 25-30 minuti al giorno. Il "Ripasso Dinamico" è attivo nelle lezioni avanzate!</p>
 
           <div class="space-y-8 relative before:absolute before:inset-0 before:ml-6 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-1.5 before:bg-gradient-to-b before:from-pink-200 before:via-blue-200 before:to-gray-200 before:rounded-full">
       `;
@@ -1101,7 +1160,7 @@
 
     const renderExplore = () => {
       let html = `
-      <div class="max-w-5xl mx-auto pb-24 mt-2 md:mt-6 animate-pop">
+      <div class="max-w-5xl mx-auto animate-pop">
         
         <div class="bg-white rounded-[3rem] p-10 md:p-12 mb-10 korean-shadow border border-blue-50 text-center relative overflow-hidden">
           <div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMiIgZmlsbD0iI2QxZDVkYiIvPjwvc3ZnPg==')]"></div>
@@ -1122,20 +1181,22 @@
 
       MAP_REGIONS.forEach(region => {
         html += `
-          <div class="bg-white rounded-[2rem] p-8 shadow-md border-2 border-gray-50 hover:shadow-xl hover:-translate-y-1 hover:border-blue-100 transition-all group">
-            <div class="flex justify-between items-start mb-6">
-              <div class="flex items-center gap-4">
-                <span class="text-5xl bg-blue-50 p-4 rounded-3xl group-hover:scale-110 transition-transform cursor-pointer" title="Ascolta in Coreano" onclick="window.playAudio(event, '${region.name.split('(')[0].trim()}')">${region.icon}</span>
-                <h2 class="text-2xl font-black text-gray-800 leading-tight">${region.name}</h2>
-              </div>
+          <div class="bg-white rounded-[2rem] overflow-hidden shadow-md border-2 border-gray-50 hover:shadow-xl hover:-translate-y-1 hover:border-blue-100 transition-all group flex flex-col">
+            <div class="h-48 relative w-full overflow-hidden">
+               <img src="${region.image}" alt="${region.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+               <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+               <span class="absolute bottom-4 left-4 text-4xl cursor-pointer" title="Ascolta in Coreano" onclick="window.playAudio(event, '${region.name.split('(')[0].trim()}')">${region.icon}</span>
             </div>
-            <p class="text-gray-600 font-bold text-base mb-6 leading-relaxed">${region.desc}</p>
-            <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100">
-               <span class="text-xs font-black text-blue-500 uppercase tracking-widest mb-3 block">Highlight</span>
-               <div class="flex flex-wrap gap-3 items-center">
-                  <span class="text-3xl hover:animate-bounce cursor-pointer">${region.emoji}</span>
-                  ${region.keywords.map(kw => `<span class="bg-white px-4 py-2 rounded-full text-sm font-bold text-gray-700 shadow-sm border border-gray-100 hover:text-blue-600 transition-colors">${kw}</span>`).join('')}
-               </div>
+            <div class="p-8 flex-1 flex flex-col">
+              <h2 class="text-2xl font-black text-gray-800 leading-tight mb-4">${region.name}</h2>
+              <p class="text-gray-600 font-bold text-base mb-6 leading-relaxed flex-1">${region.desc}</p>
+              <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                 <span class="text-xs font-black text-blue-500 uppercase tracking-widest mb-3 block">Highlight</span>
+                 <div class="flex flex-wrap gap-3 items-center">
+                    <span class="text-3xl hover:animate-bounce cursor-pointer">${region.emoji}</span>
+                    ${region.keywords.map(kw => `<span class="bg-white px-4 py-2 rounded-full text-sm font-bold text-gray-700 shadow-sm border border-gray-100 hover:text-blue-600 transition-colors">${kw}</span>`).join('')}
+                 </div>
+              </div>
             </div>
           </div>
         `;
@@ -1154,7 +1215,7 @@
             <p class="text-3xl font-black text-gray-900 mb-2 group-hover:text-pink-600 transition-colors">${window.renderHangul(ex.hangul)}</p>
             <p class="text-blue-500 font-bold mb-1 tracking-wide">${ex.romaji}</p>
             <p class="text-gray-700 font-black text-lg mb-2">"${ex.eng}"</p>
-            ${ex.context ? `<p class="text-sm text-gray-500 bg-gray-50 p-3 rounded-xl font-bold border border-gray-100 inline-block">${ex.context}</p>` : ''}
+            ${ex.context ? `<p class="text-sm text-gray-500 bg-gray-50 p-3 rounded-xl font-bold border border-gray-100 inline-block mt-2">${ex.context}</p>` : ''}
           </div>
           <button onclick="window.playAudio(event, '${ex.hangul}')" class="flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 border-2 border-blue-100 text-blue-700 px-6 py-4 rounded-2xl transition-transform hover:scale-105 shrink-0 shadow-sm w-full sm:w-auto mt-4 sm:mt-0">
             <i data-lucide="volume-2" class="w-6 h-6"></i><span class="font-black">Ascolta</span>
@@ -1163,7 +1224,7 @@
       `).join('');
 
       return `
-      <div class="max-w-3xl mx-auto pb-20 mt-2 md:mt-6 animate-pop">
+      <div class="max-w-3xl mx-auto animate-pop">
         <button onclick="window.changeView('dashboard')" class="text-gray-500 mb-6 flex items-center hover:text-gray-800 font-black transition-colors px-2 py-1 rounded-lg hover:bg-gray-100 w-fit">
           <i data-lucide="arrow-left" class="w-6 h-6 mr-2"></i> Torna alla Mappa
         </button>
@@ -1195,7 +1256,7 @@
               <h3 class="font-black text-gray-800 mb-6 text-2xl border-b-2 pb-3 border-gray-100">Frasi Chiave 📝</h3>
               <p class="text-sm font-bold text-pink-500 mb-4 bg-pink-50 p-4 rounded-xl border border-pink-100 flex gap-3 items-center shadow-sm">
                  <i data-lucide="mouse-pointer-click" class="w-6 h-6 shrink-0"></i> 
-                 <span>Tocca le parole Coreane con la linea tratteggiata per ascoltarne la pronuncia immediata! Prova a suonare le lettere (Hangul) anche se non ti senti sicura al 100%.</span>
+                 <span>Tocca le parole Coreane tratteggiate per ascoltare la pronuncia! Ripeti a voce alta.</span>
               </p>
               <div class="space-y-6">
                 ${examplesHtml}
@@ -1238,9 +1299,9 @@
       let typeLabel = 'Quiz di Comprensione';
       let typeIcon = 'brain';
       let typeColor = 'text-blue-700 bg-blue-50 border-blue-100';
-      if(exercise.type === 'speak') { typeLabel = 'Esercizio di Pronuncia Vocale'; typeIcon = 'mic'; typeColor = 'text-pink-700 bg-pink-50 border-pink-100'; }
+      if(exercise.type === 'speak') { typeLabel = 'Pronuncia Vocale'; typeIcon = 'mic'; typeColor = 'text-pink-700 bg-pink-50 border-pink-100'; }
       else if(exercise.type === 'listen') { typeLabel = 'Test di Ascolto'; typeIcon = 'headphones'; typeColor = 'text-indigo-700 bg-indigo-50 border-indigo-100'; }
-      else if(exercise.type === 'conversation') { typeLabel = 'Simulazione di Dialogo Reale'; typeIcon = 'message-square'; typeColor = 'text-orange-700 bg-orange-50 border-orange-100'; }
+      else if(exercise.type === 'conversation') { typeLabel = 'Simulazione Dialogo'; typeIcon = 'message-square'; typeColor = 'text-orange-700 bg-orange-50 border-orange-100'; }
 
       let exerciseHtml = '';
 
@@ -1280,7 +1341,6 @@
             `;
           }
 
-          // Rendi cliccabili tutte le opzioni con testo Hangul!
           const hasHangul = /[\u3131-\uD79D]/ugi.test(opt);
           const optionText = hasHangul ? window.renderHangul(opt) : opt;
 
@@ -1297,20 +1357,35 @@
           `;
         }).join('') + `</div>`;
       } else if (exercise.type === 'speak') {
-        const btnClasses = state.isRecording ? 'bg-pink-500 scale-110 shadow-2xl shadow-pink-500/50 animate-pulse border-white border-4' : isAnswered ? 'bg-gray-200 text-gray-400' : 'bg-blue-500 hover:bg-blue-600 text-white shadow-xl hover:scale-105 border-4 border-blue-200';
-        const msg = state.isRecording ? "Ti sto ascoltando... Parla chiaro!" : isAnswered ? "Analisi vocale completata." : "Tocca per parlare in Coreano";
-        exerciseHtml = `
-          <div class="flex flex-col items-center justify-center mt-12 space-y-8 bg-gray-50 p-10 rounded-[2.5rem] border-2 border-dashed border-gray-200 min-h-[300px] relative">
-            <button ${isAnswered || state.isRecording ? 'disabled' : ''} 
-              onmousedown="window.handleSpeechRecognition(event)" 
-              ontouchstart="window.handleSpeechRecognition(event)" 
-              class="relative w-40 h-40 rounded-full flex items-center justify-center transition-all ${btnClasses} no-select">
-              <i data-lucide="mic" class="w-16 h-16"></i>
-            </button>
-            <p class="text-gray-600 font-black text-center text-xl">${msg}</p>
-            ${(!isAnswered && !state.isRecording) ? `<button onclick="window.skipSpeechExercise()" class="absolute bottom-4 right-4 text-xs font-bold text-gray-400 hover:text-gray-600 bg-white border border-gray-200 px-3 py-2 rounded-lg shadow-sm">Salta Esercizio</button>` : ''}
-          </div>
-        `;
+        if(state.fallbackActive && !isAnswered) {
+            exerciseHtml = `
+            <div class="space-y-4 w-full animate-pop">
+                <p class="text-sm font-bold text-orange-600 bg-orange-50 p-4 rounded-xl border border-orange-200 mb-6 shadow-sm flex items-start gap-3 leading-relaxed">
+                    <i data-lucide="info" class="w-5 h-5 shrink-0 mt-0.5"></i> Scegli la <b>pronuncia fonetica esatta</b> per proseguire! L'audio si attiverà se indovini.
+                </p>
+                ${state.fallbackOptions.map((opt, i) => `
+                    <button onclick="window.handleFallbackAnswer(${i})" class="w-full text-left p-6 rounded-[1.2rem] border-2 border-gray-200 hover:border-pink-400 hover:bg-pink-50 font-black text-2xl transition-all shadow-sm flex items-center justify-between text-gray-800">
+                        <span>${opt}</span> <i data-lucide="ear" class="w-6 h-6 text-pink-400"></i>
+                    </button>
+                `).join('')}
+            </div>
+            `;
+        } else {
+            const btnClasses = state.isRecording ? 'bg-pink-500 scale-110 shadow-2xl shadow-pink-500/50 animate-pulse border-white border-4' : isAnswered ? 'bg-gray-200 text-gray-400' : 'bg-blue-500 hover:bg-blue-600 text-white shadow-xl hover:scale-105 border-4 border-blue-200';
+            const msg = state.isRecording ? "Ti sto ascoltando... Parla chiaro!" : isAnswered ? "Analisi completata." : "Tocca per parlare in Coreano";
+            exerciseHtml = `
+            <div class="flex flex-col items-center justify-center mt-12 space-y-8 bg-gray-50 p-10 rounded-[2.5rem] border-2 border-dashed border-gray-200 min-h-[300px] relative">
+                <button ${isAnswered || state.isRecording ? 'disabled' : ''} 
+                onmousedown="window.handleSpeechRecognition(event)" 
+                ontouchstart="window.handleSpeechRecognition(event)" 
+                class="relative w-40 h-40 rounded-full flex items-center justify-center transition-all ${btnClasses} no-select">
+                <i data-lucide="mic" class="w-16 h-16"></i>
+                </button>
+                <p class="text-gray-600 font-black text-center text-xl">${msg}</p>
+                ${(!isAnswered && !state.isRecording) ? `<button onclick="window.triggerSpeechFallback()" class="absolute bottom-4 right-4 text-xs font-bold text-gray-400 hover:text-gray-600 bg-white border border-gray-200 px-3 py-2 rounded-lg shadow-sm">Salta / Alternativa</button>` : ''}
+            </div>
+            `;
+        }
       }
 
       const feedbackClass = isCorrect ? 'bg-green-50 border-green-200 text-green-900' : 'bg-rose-50 border-rose-200 text-rose-900';
@@ -1321,7 +1396,7 @@
       const btnText = state.gameStep === lesson.exercises.length - 1 ? 'Termina Lezione e Salva' : 'Prossima Domanda';
 
       return `
-      <div class="max-w-2xl mx-auto pb-20 mt-2 md:mt-6 animate-pop">
+      <div class="max-w-2xl mx-auto animate-pop">
         
         <div class="flex justify-between items-center mb-6 px-2">
             <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
@@ -1386,6 +1461,8 @@
       const lesson = COURSE_DATA.find(d => d.day === state.activeDay);
       const total = lesson.exercises.length;
       const isPerfect = state.score === total;
+      
+      const adminCode = window._s_k_d[state.activeDay];
 
       const mistakesHtml = state.currentMistakes.length > 0 
         ? `<div class="bg-rose-50 border-2 border-rose-200 text-rose-900 p-6 rounded-2xl mb-10 text-left shadow-sm">
@@ -1397,24 +1474,30 @@
         : '';
 
       return `
-      <div class="max-w-lg mx-auto mt-12 text-center px-4 animate-pop">
-        <div class="bg-white rounded-[3rem] korean-shadow p-10 md:p-16 border border-blue-50 relative overflow-hidden">
+      <div class="max-w-lg mx-auto text-center px-4 animate-pop">
+        <div class="bg-white rounded-[3rem] korean-shadow p-10 md:p-16 border border-blue-50 relative overflow-hidden mt-4">
           
           <div class="absolute inset-0 z-0 pointer-events-none opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMiIgZmlsbD0iI2QxZDVkYiIvPjwvc3ZnPg==')]"></div>
 
           <div class="w-32 h-32 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-500 text-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-yellow-500/40 relative z-10 animate-pop">
             <i data-lucide="trophy" class="w-16 h-16"></i>
           </div>
-          <h2 class="text-5xl font-black text-gray-900 mb-3 relative z-10">Lezione Completata!</h2>
+          <h2 class="text-4xl md:text-5xl font-black text-gray-900 mb-3 relative z-10">Lezione Completata!</h2>
           <p class="text-blue-500 mb-10 font-black uppercase tracking-widest text-sm relative z-10">Giorno ${state.activeDay}: ${lesson.topic}</p>
           
           <div class="text-[5rem] font-black text-pink-500 mb-6 drop-shadow-md relative z-10 leading-none">${state.score}<span class="text-4xl text-gray-400">/${total}</span></div>
           
           ${mistakesHtml}
 
-          <p class="text-xl font-bold text-gray-600 mb-12 leading-relaxed relative z-10">
+          <p class="text-xl font-bold text-gray-600 mb-8 leading-relaxed relative z-10">
             ${isPerfect ? "Sei stata IMPECCABILE, Sara! Zero errori, pronta per un K-Drama senza sottotitoli. 🌸" : "Ottimo sforzo! Non demordere, gli errori si sistemano con la Ripetizione Spaziata."}
           </p>
+
+          <div class="bg-gray-100 p-4 rounded-xl mb-12 border border-gray-200 relative z-10 text-sm font-bold text-gray-600 text-left">
+             <i data-lucide="key" class="w-5 h-5 inline text-pink-500 mb-1"></i> Codice Segreto salvataggio: <span class="font-mono bg-white px-2 py-1 rounded shadow-sm text-pink-600 select-all">${adminCode}</span>
+             <div class="text-xs text-gray-400 mt-2 font-normal">Inseriscilo nel "Profilo" da un altro dispositivo per sbloccare automaticamente questo livello.</div>
+          </div>
+
           <button onclick="window.changeView('dashboard')" class="w-full bg-gray-900 hover:bg-black text-white py-6 rounded-2xl font-black text-2xl shadow-xl transition-transform transform hover:scale-[1.02] relative z-10 flex justify-center items-center gap-3 h-20">
             <i data-lucide="map" class="w-7 h-7"></i> Salva e Torna al Percorso
           </button>
@@ -1425,7 +1508,7 @@
 
     const renderLibrary = () => {
       let html = `
-      <div class="max-w-5xl mx-auto pb-24 mt-2 md:mt-6 animate-pop">
+      <div class="max-w-5xl mx-auto animate-pop">
         
         <div class="bg-white p-8 md:p-10 rounded-[2.5rem] korean-shadow border border-blue-50 mb-12 relative overflow-hidden">
           <div class="absolute right-0 top-0 w-64 h-64 bg-gradient-to-bl from-pink-50 to-transparent rounded-bl-full -z-10"></div>
@@ -1466,7 +1549,6 @@
         <div class="space-y-6">
       `;
 
-      // Generazione Livelli A Scomparsa (Collapsible Details) per un'UI pulita
       LIBRARY_DATA.forEach(section => {
         let itemsHtml = section.items.map(item => `
           <div class="bg-white p-6 md:p-8 rounded-[1.5rem] shadow-sm border-2 border-gray-50 flex flex-col justify-between hover:shadow-xl hover:border-pink-100 transition-all group">
@@ -1511,8 +1593,8 @@
     };
 
     const renderProfile = () => `
-      <div class="max-w-md mx-auto mt-10 md:mt-20 px-4 pb-20 animate-pop">
-        <div class="bg-white rounded-[3rem] korean-shadow p-10 border border-blue-50 text-center relative overflow-hidden">
+      <div class="max-w-md mx-auto px-4 animate-pop">
+        <div class="bg-white rounded-[3rem] korean-shadow p-10 border border-blue-50 text-center relative overflow-hidden mt-4">
           
           <div class="w-32 h-32 bg-pink-50 text-pink-600 rounded-full flex items-center justify-center mx-auto mb-8 border-8 border-white shadow-xl relative z-10">
             <i data-lucide="user" class="w-16 h-16"></i>
@@ -1520,7 +1602,7 @@
           <h2 class="text-4xl font-black text-gray-900 mb-2">Profilo di Studio</h2>
           <p class="text-gray-500 mb-12 font-bold text-lg">Il tuo viaggio in Corea è al sicuro qui.</p>
           
-          <div class="text-left mb-10">
+          <div class="text-left mb-8">
             <label class="block text-sm font-black text-gray-500 mb-3 uppercase tracking-widest">Cambia Nome Studente</label>
             <input 
               type="text" 
@@ -1528,6 +1610,15 @@
               onchange="window.updateProfileName(this.value)"
               class="w-full border-2 border-gray-200 rounded-2xl p-5 text-2xl font-black text-gray-800 focus:border-pink-500 outline-none transition-colors shadow-inner bg-gray-50 focus:bg-white min-h-[60px]"
             />
+          </div>
+
+          <div class="text-left mb-10 bg-pink-50 p-6 rounded-3xl border border-pink-100">
+             <label class="block text-sm font-black text-pink-600 mb-2 uppercase tracking-widest flex items-center gap-2"><i data-lucide="unlock" class="w-4 h-4"></i> Inserisci Codice Sblocco</label>
+             <p class="text-xs text-pink-500 font-bold mb-3">Usa il codice segreto ottenuto su un altro dispositivo per sincronizzare il livello!</p>
+             <div class="flex gap-2">
+                 <input type="text" id="unlockCodeInput" placeholder="es. A7X9M" class="w-full border-2 border-pink-200 rounded-xl p-3 text-lg font-bold text-gray-800 focus:border-pink-500 outline-none uppercase font-mono shadow-inner" />
+                 <button onclick="window.unlockDayWithCode(document.getElementById('unlockCodeInput').value)" class="bg-pink-500 hover:bg-pink-600 text-white px-5 rounded-xl font-bold shadow-md"><i data-lucide="arrow-right" class="w-6 h-6"></i></button>
+             </div>
           </div>
 
           <div class="bg-gray-900 p-8 rounded-3xl mb-12 flex justify-between items-center text-left shadow-xl">
