@@ -44,7 +44,7 @@
     }
     
     .bg-pattern {
-      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='#e2e8f0' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='#e2e8f0' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
 
     .pb-safe { padding-bottom: env(safe-area-inset-bottom, 24px); }
@@ -1185,7 +1185,7 @@
             </div>
             <p class="text-sm font-bold mt-2 flex items-center gap-2">
                 ${Math.round(totalProgress)}% Completato. 
-                ${totalProgress === 100 ? "Grandiosa!" : "Forza Sara!"}
+                ${totalProgress === 100 ? "Grandiosa! 화이팅! ✊" : "Forza Sara, 화이팅! (Fighting!) ✊"}
             </p>
           </div>
           <div class="flex gap-4 w-full md:w-auto z-10 shrink-0">
@@ -1519,7 +1519,7 @@
       const feedbackClass = isCorrect ? 'bg-green-50 border-green-200 text-green-900' : 'bg-rose-50 border-rose-200 text-rose-900';
       const iconClass = isCorrect ? 'bg-green-500' : 'bg-rose-500';
       const iconType = isCorrect ? 'check' : 'message-circle-warning';
-      const headingText = isCorrect ? 'Perfetto, Sara! 🎉' : 'Oops, non ti arrendere! 💡';
+      const headingText = isCorrect ? 'Perfetto, Sara! 🎉 화이팅! (Fighting!) ✊' : 'Oops, non ti arrendere! 화이팅! (Fighting!) 💪';
       const btnFeedClass = isCorrect ? 'bg-green-500 hover:bg-green-600 shadow-green-500/30' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/30';
       const btnText = state.gameStep === lesson.exercises.length - 1 ? 'Termina Lezione e Salva' : 'Prossima Domanda';
 
@@ -1627,7 +1627,7 @@
           ${mistakesHtml}
 
           <p class="text-xl font-bold text-gray-600 mb-8 leading-relaxed relative z-10">
-            ${isPerfect ? "Sei stata IMPECCABILE, Sara! Zero errori, pronta per un K-Drama o un game a LoL senza sottotitoli. 🌸" : "Ottimo sforzo! Non demordere, gli errori si sistemano con la Ripetizione Spaziata."}
+            ${isPerfect ? "Sei stata IMPECCABILE, Sara! Zero errori, pronta per un K-Drama o un game a LoL senza sottotitoli. 🌸 화이팅! ✊" : "Ottimo sforzo! Non demordere, ricorda lo spirito sportivo dei K-Drama: 화이팅! (Fighting!) ✊ Gli errori si sistemano con la Ripetizione Spaziata."}
           </p>
 
           <!-- Conversation Mission Hook: Heavier Output Focus -->
