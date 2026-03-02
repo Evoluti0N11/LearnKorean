@@ -1,22 +1,66 @@
 {
-  "name": "Annyeong Sara! Coreano in 45 Giorni",
+  "id": "annyeong-sara-korean-app-v1",
+  "name": "Annyeong Sara! Parla Coreano in 45 Giorni",
   "short_name": "Annyeong Sara",
-  "description": "App per imparare il coreano con focus su Gaming, Gym e K-Drama.",
+  "description": "Il tuo percorso interattivo per padroneggiare il Coreano con focus su Gaming, Gym, Cosplay e K-Drama.",
   "start_url": "./index.html",
+  "scope": "./",
+  "lang": "it-IT",
+  "dir": "ltr",
   "display": "standalone",
-  "background_color": "#fdfbf7",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "orientation": "portrait-primary",
   "theme_color": "#f472b6",
-  "orientation": "portrait",
+  "background_color": "#fdfbf7",
+  "categories": ["education", "lifestyle", "games"],
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Continua il Percorso",
+      "short_name": "Lezioni",
+      "description": "Torna al syllabus e riprendi a studiare",
+      "url": "./index.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dizionario e Traduttore",
+      "short_name": "Traduttore",
+      "description": "Apri le risorse rapide",
+      "url": "./index.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "screenshot-desktop.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide"
     }
   ]
 }
