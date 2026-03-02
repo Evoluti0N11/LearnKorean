@@ -8,22 +8,17 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Annyeong Sara! Parla Coreano in 45 Giorni</title>
   
-  <!-- Google Fonts for Professional Typography (Korean Support) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
   
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Leaflet CSS & JS for OpenStreetMap -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-  <!-- Canvas Confetti for Gamification -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -51,6 +46,7 @@
     .no-select { user-select: none; -webkit-user-select: none; }
     .hide-scroll::-webkit-scrollbar { display: none; }
     .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    .text-shadow-sm { text-shadow: 0 1px 2px rgba(0,0,0,0.15); } /* Better contrast on gradients */
     
     .korean-shadow { box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.08), 0 8px 10px -6px rgba(59, 130, 246, 0.04); }
     .hangul-watermark {
@@ -158,7 +154,6 @@
 
   <div id="root" class="flex flex-col h-full w-full relative"></div>
 
-  <!-- Generatore Codici Admin Segreti -->
   <script>
     window._s_k_d = Array.from({length: 46}, (_, i) => "SR" + (i * 13 + 7) + "K");
   </script>
@@ -172,7 +167,7 @@
     const state = {
       user: null,
       profileName: "Sara",
-      hangulScale: 1, // Accessibility feature
+      hangulScale: 1, 
       isAuthLoading: false,
       isTransitioning: false, 
       currentView: 'dashboard', 
@@ -227,7 +222,7 @@
         }
     };
 
-    // --- DAY 1 TO 5: THE CORE FOUNDATION (TAILORED FOR SARA) ---
+    // --- DAY 1 TO 5: THE CORE FOUNDATION ---
     const DETAILED_LESSONS = [
       {
         day: 1,
@@ -383,7 +378,7 @@
       }
     ];
 
-    // --- PROCEDURAL GENERATOR FOR DAYS 6-45 (TAILORED FOR SARA) ---
+    // --- PROCEDURAL GENERATOR FOR DAYS 6-45 ---
     const ADVANCED_TOPICS = [
       { name: "Passione LoL: Iniziamo!", hangul: "리그 오브 레전드 좋아해요?", romaji: "Rigeu obeu lejeondeu joahaeyo?", eng: "Ti piace League of Legends?", scenario: "Vedi qualcuno al PC Bang con una maglietta di T1.", clue: "리그 오브 레전드 (Rigeu obeu lejeondeu) = LoL" },
       { name: "Caffetteria Trendy", hangul: "아이스 아메리카노 한 잔 주세요", romaji: "Aiseu amerikano han jan juseyo", eng: "Un Iced Americano, per favore", scenario: "Sei in un cat cafe e ordini da bere.", clue: "한 잔 (han jan) = una tazza/bicchiere" },
@@ -434,7 +429,10 @@
         const t = ADVANCED_TOPICS[i - 6];
         let dailyExercises = [];
 
-        for (let round = 0; round < 4; round++) {
+        // Increase loop to generate more exercises (closer to 25 min engagement)
+        for (let round = 0; round < 6; round++) {
+            
+            // 1. Basic Vocabulary Quiz
             dailyExercises.push({
               type: 'multiple_choice',
               question: `Situazione: ${t.scenario}. Cosa significa "${t.romaji}"?`,
@@ -445,6 +443,7 @@
               tip: `Ricorda: ${t.clue}`
             });
 
+            // 2. Active Listening (Shadowing)
             dailyExercises.push({
               type: 'listen',
               question: "[Shadowing Loop] Ascolta l'audio 3 volte, chiudi gli occhi e ripeti ad alta voce imitando l'accento. Poi seleziona la risposta corretta:",
@@ -455,6 +454,7 @@
               tip: "La ripetizione attiva (shadowing) è il segreto per sbloccare la scioltezza vocale. Non saltare questo passaggio e usa la tua voce!"
             });
 
+            // 3. Pronunciation Practice
             dailyExercises.push({
               type: 'speak',
               question: `Pronuncia: Dì '${t.eng}' in Coreano.`,
@@ -465,17 +465,33 @@
               tip: "Non avere paura di sbagliare l'accento."
             });
 
-            dailyExercises.push({
-              type: 'conversation',
-              context: `Sfida di Fluidità: Ora che hai imparato "${t.eng}", pensa a come unirla con le frasi dei Giorni 1-5 (saluti o ringraziamenti).`,
-              question: `Nello scenario "${t.name}", qual è la frase chiave per mantenere attiva questa conversazione?`,
-              options: [t.romaji, "Igeo juseyo", "Annyeonghaseyo"],
-              optionsHangul: [t.hangul, "이거 주세요", "안녕하세요"],
-              answer: 0,
-              conceptTag: "Scenari Reali",
-              tip: `Usa ${t.romaji} nel contesto giusto, sempre accompagnato da un sorriso o un inchino verbale.`
-            });
+            // 4. Grammar Construction (NEW: Ordering)
+            const words = t.hangul.split(' ');
+            if(words.length > 1) {
+                 const wrongOrder1 = [...words].reverse().join(' ');
+                 const wrongOrder2 = words[words.length-1] + " " + words.slice(0, words.length-1).join(' ');
+                 
+                 // Create options array ensuring no duplicates if words are similar
+                 let optionsArr = Array.from(new Set([t.hangul, wrongOrder1, wrongOrder2]));
+                 // Fallback if set collapses to 1 item
+                 if(optionsArr.length < 2) optionsArr = [t.hangul, t.hangul + " 요", "안 " + t.hangul];
 
+                 // Shuffle options
+                 const shuffledOptions = [...optionsArr].sort(() => Math.random() - 0.5);
+                 const correctIndex = shuffledOptions.indexOf(t.hangul);
+
+                 dailyExercises.push({
+                    type: 'multiple_choice',
+                    question: `Costruzione Frase: Qual è l'ordine grammaticale corretto per "${t.eng}"?`,
+                    options: shuffledOptions,
+                    optionsHangul: shuffledOptions,
+                    answer: correctIndex,
+                    conceptTag: "Costruzione Grammaticale",
+                    tip: "Ricorda la struttura base del Coreano (SOV), il verbo 'essere' o l'azione vanno alla fine!"
+                 });
+            }
+
+            // 5. Spaced Repetition (Review)
             const randomDayNum = Math.floor(Math.random() * Math.min(i - 1, 5)) + 1; 
             const pastDay = fullCourse.find(d => d.day === randomDayNum);
             const reviewExs = pastDay.exercises.filter(ex => ex.type === 'multiple_choice' || ex.type === 'listen');
@@ -507,8 +523,18 @@
 
     const COURSE_DATA = generateFullMonth();
 
-    // EXPANDED LIBRARY DATA WITH COLLAPSIBLE SECTIONS FOR BETTER UI
+    // EXPANDED LIBRARY DATA WITH COLLAPSIBLE SECTIONS
     const LIBRARY_DATA = [
+      {
+        category: "Day 0: L'Alfabeto (Hangul) 🔠",
+        icon: "a-large-small", iconColor: "text-blue-500",
+        items: [
+          { hangul: "ㅏ, ㅓ, ㅗ, ㅜ, ㅡ, ㅣ", romaji: "a, eo, o, u, eu, i", eng: "Vocali Base", context: "Le fondamenta del suono coreano. 'eo' è una 'o' aperta, 'eu' si pronuncia stringendo i denti." },
+          { hangul: "ㄱ, ㄴ, ㄷ, ㄹ, ㅁ, ㅂ, ㅅ, ㅇ, ㅈ", romaji: "g/k, n, d/t, r/l, m, b/p, s, ng, j", eng: "Consonanti Base", context: "La pronuncia cambia leggermente a seconda della posizione nella sillaba." },
+          { hangul: "ㅋㅋ / ㅎㅎ", romaji: "kk / hh", eng: "Risate in chat", context: "Il corrispettivo coreano di 'lol' o 'haha' su KakaoTalk e League of Legends." },
+          { hangul: "파이팅", romaji: "Paiting / Hwaiting", eng: "Forza! / Buona Fortuna!", context: "Scritto in Hangul, deriva dall'inglese 'Fighting'. Incoraggiamento per eccellenza!" }
+        ]
+      },
       {
         category: "Passioni di Sara: Anime & Gaming 🎮",
         icon: "gamepad-2", iconColor: "text-blue-500",
@@ -527,8 +553,7 @@
           { hangul: "스물다섯 스물하나 봤어요?", romaji: "Seumuldaseot seumulhana bwasseoyo?", eng: "Hai visto 2521?", context: "La serie amatissima da Sara! Usalo per rompere il ghiaccio coi coetanei." },
           { hangul: "백이진 멋있어요", romaji: "Baek Yi-jin meosisseoyo", eng: "Baek Yi-jin è figo/bello", context: "Per fangirlare sui protagonisti." },
           { hangul: "진짜요?", romaji: "Jinjjayo?", eng: "Davvero?!", context: "La reazione standard nei drama per esprimere stupore." },
-          { hangul: "헐", romaji: "Heol", eng: "Omg / Wow", context: "Esclamazione gergale tipica usata da Na Hee-do quando è scioccata." },
-          { hangul: "화이팅!", romaji: "Hwaiting!", eng: "Forza! / Buona fortuna!", context: "Il classico incitamento coreano per dare supporto morale." }
+          { hangul: "헐", romaji: "Heol", eng: "Omg / Wow", context: "Esclamazione gergale tipica usata da Na Hee-do quando è scioccata." }
         ]
       },
       {
@@ -537,8 +562,7 @@
         items: [
           { hangul: "고양이 만져도 돼요?", romaji: "Goyangi manjyeodo dwaeyo?", eng: "Posso accarezzare il gatto?", context: "Chiedi sempre prima di toccare animali altrui!" },
           { hangul: "강아지 너무 귀여워요", romaji: "Gangaji neomu gwiyeowoyo", eng: "Il cagnolino è troppo carino.", context: "Il complimento che ti farà amare dai padroni coreani." },
-          { hangul: "풍경이 아름다워요", romaji: "Punggyeong-i areumdawoyo", eng: "Il paesaggio è bellissimo.", context: "Mentre ammiri il fiume Han o Jeju-do." },
-          { hangul: "산책 갈까요?", romaji: "Sanchaek galkkayo?", eng: "Andiamo a fare una passeggiata?", context: "Ottimo per esplorare in compagnia." }
+          { hangul: "풍경이 아름다워요", romaji: "Punggyeong-i areumdawoyo", eng: "Il paesaggio è bellissimo.", context: "Mentre ammiri il fiume Han o Jeju-do." }
         ]
       },
       {
@@ -548,19 +572,7 @@
           { hangul: "몰라요", romaji: "Mollayo", eng: "Non lo so / Non capisco", context: "Molto informale, ma utile per tirarsi fuori d'impiccio." },
           { hangul: "괜찮아요", romaji: "Gwaenchanayo", eng: "Va bene / Sto bene", context: "Perfetto per dire 'No grazie' o 'Nessun problema'." },
           { hangul: "한국어 잘 못해요", romaji: "Hangugeo jal mothaeyo", eng: "Non parlo bene il coreano", context: "Usalo per chiedere clemenza se i locali parlano a raffica." },
-          { hangul: "도와주세요", romaji: "Dowajuseyo", eng: "Aiutatemi / Per favore aiutami", context: "Se ti sei persa o hai un'emergenza vera e propria." },
-          { hangul: "아파요", romaji: "Apayo", eng: "Mi fa male / Sono malata", context: "Punta la parte del corpo che fa male e dì 'Apayo'." }
-        ]
-      },
-      {
-        category: "Ristorante & Cibo 🥘",
-        icon: "utensils", iconColor: "text-orange-500",
-        items: [
-          { hangul: "저기요!", romaji: "Jeogiyo!", eng: "Scusi! (Per chiamare il cameriere)", context: "Alza la mano o premi il campanello al tavolo e grida questo." },
-          { hangul: "이거 주세요", romaji: "Igeo juseyo", eng: "Questo, per favore.", context: "Indica la foto nel menu." },
-          { hangul: "안 맵게 해주세요", romaji: "An maepge haejuseyo", eng: "Non piccante, per favore", context: "Per salvarti lo stomaco." },
-          { hangul: "물 좀 주세요", romaji: "Mul jom juseyo", eng: "Acqua, per favore", context: "A volte il distributore d'acqua è self-service (scritto 'Self')." },
-          { hangul: "맥주 / 소주", romaji: "Maekju / Soju", eng: "Birra / Soju", context: "Le due bevande alcoliche più consumate in Corea (Somaek se le mischi!)." }
+          { hangul: "도와주세요", romaji: "Dowajuseyo", eng: "Aiutatemi / Per favore aiutami", context: "Se ti sei persa o hai un'emergenza vera e propria." }
         ]
       }
     ];
@@ -761,6 +773,8 @@
       try {
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=it&tl=ko&dt=t&dt=rm&q=${encodeURIComponent(text)}`;
         const res = await fetch(url);
+        if (!res.ok) throw new Error("Translation API limit reached");
+
         const data = await res.json();
         
         let koText = "";
@@ -790,8 +804,8 @@
             state.transResult = "Impossibile tradurre.";
         }
       } catch(e) {
-        state.transResult = "Errore di rete. Riprova.";
-        showSaveToast("Errore di rete durante la traduzione.", true);
+        state.transResult = "Servizio traduzione temporaneamente non disponibile.";
+        showSaveToast("Errore di rete o limite API raggiunto.", true);
       }
       
       state.transLoading = false;
@@ -807,9 +821,12 @@
             myMap = null;
         }
 
+        // Prevent Scroll Trap on Mobile by disabling dragging
         myMap = L.map('korea-map', {
             zoomControl: false,
-            scrollWheelZoom: false 
+            scrollWheelZoom: false,
+            dragging: false, // Fix: Prevents scroll trap on mobile
+            tap: false       // Fix: Prevents unintended interactions on mobile scrolling
         }).setView([36.5, 127.5], 7);
         
         L.control.zoom({ position: 'topright' }).addTo(myMap);
@@ -846,6 +863,7 @@
     };
 
     // --- GLOBAL ACTIONS WITH LOADING TRANSITION ---
+    // Reduced timeout to 50ms for native snappiness without removing fade effect
     window.changeView = (view) => {
       window.haptic(20);
       state.isTransitioning = true;
@@ -854,7 +872,7 @@
           state.currentView = view;
           state.isTransitioning = false;
           renderApp();
-      }, 300); // 300ms App-like fade transition
+      }, 50); 
     };
 
     window.startDay = (dayNum) => {
@@ -873,7 +891,7 @@
           state.currentMistakes = [];
           state.isTransitioning = false;
           renderApp();
-      }, 300);
+      }, 50);
     };
 
     window.startGame = () => {
@@ -884,7 +902,7 @@
           state.currentView = 'game';
           state.isTransitioning = false;
           renderApp();
-      }, 300);
+      }, 50);
     };
 
     window.handleMultipleChoiceAnswer = (index) => {
@@ -1008,7 +1026,8 @@
         } else {
             state.combo = 0;
             window.haptic(100);
-            exercise.feedback_incorrect = `Hai detto: "${rawTranscript}". Non sono riuscita a capirti bene, riprova scandendo meglio!`;
+            // Better Pedagogy: Show the user what was heard
+            exercise.feedback_incorrect = `Ho sentito: "${rawTranscript}". Dovevi dire: "${exercise.expectedRomaji[0]}". Riprova scandendo meglio!`;
             state.currentMistakes.push(exercise.conceptTag);
         }
         renderApp();
@@ -1102,7 +1121,6 @@
             <div class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[10000] flex items-center justify-center animate-fadein">
                 <div class="bg-white p-6 rounded-3xl shadow-2xl flex flex-col items-center">
                     <i data-lucide="loader-2" class="animate-spin text-pink-500 w-12 h-12 mb-3"></i>
-                    <span class="font-black text-gray-600 tracking-widest uppercase text-xs">Caricamento</span>
                 </div>
             </div>
          `;
@@ -1163,9 +1181,7 @@
 
       // Streak calculation (consecutive days played would require dates, we simulate a simple visual for now based on recent activity/combos)
       const currentStreak = state.completedDays.length > 0 ? (state.combo > 0 ? state.combo : 1) : 0; 
-      // We will show a daily goal tracker
-      const exercisesDoneToday = state.score; 
-
+      
       let html = `
       <div class="max-w-4xl mx-auto relative">
         <div class="hangul-watermark">가자</div>
@@ -1175,10 +1191,10 @@
              <i data-lucide="sparkles" class="w-48 h-48"></i>
           </div>
           <div class="z-10 w-full">
-            <h1 class="text-4xl md:text-5xl font-black mb-3 tracking-tight no-select flex justify-between items-center">
+            <h1 class="text-4xl md:text-5xl font-black mb-3 tracking-tight no-select flex justify-between items-center text-shadow-sm">
                <span>Annyeong, ${state.profileName}! 🌸</span>
             </h1>
-            <p class="text-pink-50 text-xl font-bold mb-4">Il tuo percorso per padroneggiare il Coreano in 45 giorni.</p>
+            <p class="text-pink-50 text-xl font-bold mb-4 text-shadow-sm">Il tuo percorso per padroneggiare il Coreano in 45 giorni.</p>
             
             <div class="w-full max-w-md bg-white/20 h-4 rounded-full overflow-hidden backdrop-blur-sm border border-white/30">
                <div class="bg-white h-full transition-all duration-1000" style="width: ${totalProgress}%"></div>
@@ -1200,7 +1216,6 @@
           </div>
         </header>
 
-        <!-- Daily Goal Gamification Hook -->
         <div class="bg-white p-5 rounded-[1.5rem] shadow-sm border border-gray-100 mb-8 flex items-center justify-between gap-4">
            <div class="flex items-center gap-4">
               <div class="p-3 bg-green-50 text-green-500 rounded-full"><i data-lucide="target" class="w-6 h-6"></i></div>
@@ -1343,10 +1358,10 @@
         <div class="bg-white rounded-[2rem] korean-shadow overflow-hidden border border-blue-50">
           <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-8 md:p-12 relative overflow-hidden">
             <i data-lucide="book-open" class="absolute right-0 bottom-0 w-48 h-48 opacity-10 transform translate-x-10 translate-y-10"></i>
-            <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-xs font-black tracking-widest uppercase mb-6 inline-block shadow-sm border border-white/30">
+            <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-xs font-black tracking-widest uppercase mb-6 inline-block shadow-sm border border-white/30 text-shadow-sm">
               Giorno ${lesson.day} • Teoria
             </span>
-            <h2 class="text-3xl md:text-5xl font-black leading-tight relative z-10">${lesson.title}</h2>
+            <h2 class="text-3xl md:text-5xl font-black leading-tight relative z-10 text-shadow-sm">${lesson.title}</h2>
           </div>
           
           <div class="p-6 md:p-12 space-y-12 text-gray-700 text-lg">
@@ -1500,7 +1515,7 @@
             `;
         } else {
             const btnClasses = state.isRecording ? 'bg-pink-500 scale-110 shadow-2xl shadow-pink-500/50 recording-pulse border-white border-4' : isAnswered ? 'bg-gray-200 text-gray-400' : 'bg-blue-500 hover:bg-blue-600 text-white shadow-xl hover:scale-105 border-4 border-blue-200';
-            const msg = state.isRecording ? "Ti sto ascoltando... Parla chiaro!" : isAnswered ? "Analisi completata." : "Tocca per parlare in Coreano";
+            const msg = state.isRecording ? "Ti sto ascoltando... Parla chiaro!" : isAnswered ? "Analisi completata." : "Tocca una volta e parla";
             exerciseHtml = `
             <div class="flex flex-col items-center justify-center mt-12 space-y-8 bg-gray-50 p-10 rounded-[2.5rem] border-2 border-dashed border-gray-200 min-h-[300px] relative">
                 <button ${isAnswered || state.isRecording ? 'disabled' : ''} 
@@ -1582,7 +1597,6 @@
             </button>
           </div>
         </div>
-        <!-- Swipe Hint on Mobile -->
         <p class="text-center text-gray-400 text-xs mt-6 font-bold flex justify-center items-center gap-2 opacity-50 md:hidden">
             <i data-lucide="move-horizontal" class="w-4 h-4"></i> Scorri a sinistra per procedere
         </p>
@@ -1630,7 +1644,6 @@
             ${isPerfect ? "Sei stata IMPECCABILE, Sara! Zero errori, pronta per un K-Drama o un game a LoL senza sottotitoli. 🌸 화이팅! ✊" : "Ottimo sforzo! Non demordere, ricorda lo spirito sportivo dei K-Drama: 화이팅! (Fighting!) ✊ Gli errori si sistemano con la Ripetizione Spaziata."}
           </p>
 
-          <!-- Conversation Mission Hook: Heavier Output Focus -->
           <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-3xl border border-indigo-100 mb-10 shadow-md relative z-10 text-left">
              <div class="flex items-center justify-between mb-4">
                  <span class="font-black text-indigo-900 flex items-center gap-2 text-lg"><i data-lucide="mic-2" class="w-6 h-6 text-indigo-500"></i> Roleplay: Parla Davvero</span>
@@ -1688,7 +1701,6 @@
           ` : ''}
         </div>
 
-        <!-- YOUTUBE RESOURCE SECTION -->
         <div class="bg-white rounded-[2.5rem] p-8 md:p-10 mb-12 shadow-sm border-2 border-red-50 relative overflow-hidden flex flex-col md:flex-row items-center gap-8 group hover:shadow-lg transition-shadow">
            <div class="p-6 bg-red-50 text-red-500 rounded-full shrink-0 group-hover:scale-110 transition-transform">
                <i data-lucide="youtube" class="w-16 h-16"></i>
@@ -1704,10 +1716,10 @@
 
         <div class="bg-gradient-to-r from-blue-400 to-pink-400 text-white rounded-[2.5rem] p-10 md:p-12 mb-12 shadow-xl text-center md:text-left relative overflow-hidden">
           <i data-lucide="book-marked" class="absolute right-0 bottom-0 w-64 h-64 opacity-10 transform translate-x-10 translate-y-10"></i>
-          <h1 class="text-4xl md:text-5xl font-black mb-4 flex items-center justify-center md:justify-start gap-4 relative z-10">
+          <h1 class="text-4xl md:text-5xl font-black mb-4 flex items-center justify-center md:justify-start gap-4 relative z-10 text-shadow-sm">
              Dizionario Interattivo 🎒
           </h1>
-          <p class="text-blue-50 text-xl font-bold relative z-10">Tocca le frasi in Coreano (Hangul) per allenare la pronuncia prima di uscire in città.</p>
+          <p class="text-blue-50 text-xl font-bold relative z-10 text-shadow-sm">Tocca le frasi in Coreano (Hangul) per allenare la pronuncia prima di uscire in città.</p>
         </div>
         <div class="space-y-6">
       `;
@@ -1785,7 +1797,6 @@
             />
           </div>
 
-          <!-- Radar/Skill Chart Simulator -->
           <div class="text-left mb-8 bg-gray-50 p-6 rounded-3xl border border-gray-100">
              <label class="block text-sm font-black text-gray-800 mb-4 uppercase tracking-widest flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-5 h-5 text-blue-500"></i> Competenze Apprese</label>
              <div class="space-y-4">
@@ -1804,7 +1815,6 @@
              </div>
           </div>
 
-          <!-- Accessibility Font Slider -->
           <div class="text-left mb-10 p-6 rounded-3xl border border-gray-200">
              <label class="block text-sm font-black text-gray-800 mb-2 uppercase tracking-widest flex items-center gap-2"><i data-lucide="zoom-in" class="w-5 h-5"></i> Grandezza Testo Coreano</label>
              <p class="text-xs text-gray-500 font-bold mb-4 leading-relaxed">Se i caratteri ti sembrano troppo piccoli sul telefono, usa questo slider per ingrandirli in tutta l'app.</p>
