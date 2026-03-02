@@ -10,14 +10,20 @@
   
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
-  
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#f472b6">
+  <meta name="theme-color" content="#fdfbf7">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
   
+  <script>
+    tailwind = {
+      config: {
+        darkMode: 'class'
+      }
+    }
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -48,7 +54,9 @@
       background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='#e2e8f0' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
 
-    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 24px); }
+    .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 24px); }
+    .pt-safe { padding-top: max(env(safe-area-inset-top), 12px); } /* Protezione Notch iPhone/Android */
+    
     .no-select { user-select: none; -webkit-user-select: none; }
     .hide-scroll::-webkit-scrollbar { display: none; }
     .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
@@ -161,7 +169,7 @@
     html.dark .text-gray-900, html.dark .text-gray-800, html.dark .text-gray-700 { color: #f8fafc !important; }
     html.dark .text-gray-600, html.dark .text-gray-500 { color: #cbd5e1 !important; }
     html.dark .bg-gray-50, html.dark .bg-gray-100, html.dark .bg-gray-200 { background-color: #0f172a !important; border-color: #1e293b !important; color: #f8fafc !important; }
-    html.dark nav { background-color: rgba(15, 23, 42, 0.95) !important; border-top-color: #334155 !important; }
+    html.dark nav, html.dark header.app-top-bar { background-color: rgba(15, 23, 42, 0.95) !important; border-color: #334155 !important; }
     html.dark input[type="text"] { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
     html.dark .leaflet-popup-content-wrapper { background-color: #1e293b !important; color: #f8fafc !important; }
     html.dark .korean-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
@@ -210,6 +218,7 @@
 
     if (state.isDarkMode) {
         document.documentElement.classList.add('dark');
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0f172a');
     }
 
     if ('speechSynthesis' in window) {
@@ -234,9 +243,11 @@
         if (state.isDarkMode) {
             document.documentElement.classList.add('dark');
             localStorage.setItem('sara_theme', 'dark');
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0f172a');
         } else {
             document.documentElement.classList.remove('dark');
             localStorage.setItem('sara_theme', 'light');
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', '#fdfbf7');
         }
         renderApp();
     };
@@ -316,7 +327,7 @@
           { type: 'conversation', context: "🧑 Incontri un cosplayer ad Hongdae che ti chiede: 이름이 뭐예요? (Ireum-i mwoyeyo? - Come ti chiami?)", question: "Come rispondi alla sua domanda?", options: ["Roma-eseo wasseoyo", "Je chwimineun koseupeure-yeyo", "Jeoneun Sara-yeyo"], optionsHangul: ["로마에서 왔어요", "제 취미는 코스프레예요", "저는 사라예요"], answer: 2, conceptTag: "Risposta intro", feedback_incorrect: "Hai risposto qualcos'altro!", tip: "Ti ha chiesto il nome (Ireum). Rispondi con 'Jeoneun Sara-yeyo'." },
           { type: 'listen', question: "Ascolta questa frase che userai per rompere il ghiaccio in una palestra coreana:", audioHangul: "제 취미는 운동이에요", options: ["Mi piacciono i cani", "Il mio hobby è l'allenamento", "Vengo dall'Italia"], answer: 1, conceptTag: "Ascolto GYM", feedback_incorrect: "Ascolta la parola 'Undong'.", tip: "Undong = Allenamento/Palestra!" },
           { type: 'speak', question: "Rispondi a un complimento sul tuo accento dicendo da dove vieni: 'Vengo da Roma'.", expectedRomaji: ["romaeseo wasseoyo", "romaeseowasseoyo"], expectedHangul: ["로마에서 왔어요"], conceptTag: "Pronuncia", feedback_incorrect: "Prova ancora.", tip: "Ro-ma e-seo was-seo-yo." },
-          { type: 'multiple_choice', question: "Sei in un bar e vedi qualcuno con la spilletta di Sandbox. Come gli chiedi 'Hai visto Start-Up?'", options: ["Aenimeisyeon joahaeyo", "Seutateueop bwasseoyo?", "Jeoneun Start-Up yeyo"], optionsHangul: ["애니메이션 좋아해요", "스타트업 봤어요?", "저는 스타트업리에요"], answer: 1, conceptTag: "Hobby Kdrama", feedback_incorrect: "Usa il verbo 'guardare' al passato (bwasseoyo).", tip: "Seutateueop (Start-Up) + bwasseoyo? (hai visto?)." },
+          { type: 'multiple_choice', question: "Sei in un bar e vedi qualcuno con la spilletta di Sandbox. Come gli chiedi 'Hai visto Start-Up?'", options: ["Aenimeisyeon joahaeyo", "Seutateueop bwasseoyo?", "Jeoneun Start-Up yeyo"], optionsHangul: ["애니메이션 좋아해요", "스타트업 봤어요?", "저는 스타트업이에요"], answer: 1, conceptTag: "Hobby Kdrama", feedback_incorrect: "Usa il verbo 'guardare' al passato (bwasseoyo).", tip: "Seutateueop (Start-Up) + bwasseoyo? (hai visto?)." },
           { type: 'speak', question: "Dì in modo fiero: 'Il mio hobby è il Cosplay' (Je chwimineun koseupeure-yeyo).", expectedRomaji: ["je chwimineun koseupeureyeyo", "jechwimineunkoseupeureyeyo"], expectedHangul: ["제 취미는 코스프레예요"], conceptTag: "Parlato Cosplay", feedback_incorrect: "Ricorda la pronuncia di Cosplay.", tip: "Je chwi-mi-neun ko-seu-peu-re-ye-yo." },
           { type: 'multiple_choice', question: "Per scoprire l'età di qualcuno (e capire la formalità), cosa gli chiedi?", options: ["Myeot sarieyo?", "Ireum-i mwoyeyo?", "Bangapseumnida?"], optionsHangul: ["몇 살이에요?", "이름이 뭐예요?", "반갑습니다?"], answer: 0, conceptTag: "Fare domande", feedback_incorrect: "Hai selezionato un'altra domanda.", tip: "Myeot (quanti) + sal (anni) + ieyo? (sei?)." },
           { type: 'conversation', context: "Stai chiacchierando con il gruppo della palestra in sala pesi.", question: "Qual è la sequenza perfetta per presentare te stessa a Sara?", options: ["Gamsahamnida. Sara-yeyo.", "Jeoneun Sara-yeyo. Roma-eseo wasseoyo. Bangapseumnida.", "Roma-eseo wasseoyo. Joesonghamnida."], optionsHangul: ["감사합니다. 사라예요.", "저는 사라예요. 로마에서 왔어요. 반갑습니다.", "로마에서 왔어요. 죄송합니다."], answer: 1, conceptTag: "Intro completa", feedback_incorrect: "L'ordine logico è nome, provenienza, piacere.", tip: "Nome -> Vengo da Roma -> Piacere di conoscerti (Bangapseumnida)." },
@@ -418,7 +429,6 @@
     ];
 
     // --- PROCEDURAL GENERATOR FOR DAYS 6-45 (TAILORED FOR SARA) ---
-    // Abbiamo sostituito e integrato con topic legati a Gym, LoL, Start-Up, 2521, Nam Joo-hyuk e Cosplay.
     const ADVANCED_TOPICS = [
       { name: "Start-Up Quotes", hangul: "지도 없는 항해를 떠나는 거예요", romaji: "Jido eomneun hanghaereul tteonaneun geoyeyo", eng: "Partiamo per un viaggio senza mappa", scenario: "Vuoi citare la famosa frase di Start-Up per incoraggiare un amico.", clue: "항해 (hanghae) = viaggio/navigazione" },
       { name: "Gym Rat: Workout", hangul: "몇 세트 남았어요?", romaji: "Myeot sete namasseoyo?", eng: "Quante serie ti mancano?", scenario: "Vuoi usare un macchinario occupato in palestra.", clue: "세트 (sete) = set/serie in palestra" },
@@ -443,7 +453,7 @@
       { name: "Ricevere Complimenti in Game", hangul: "게임 정말 잘하시네요!", romaji: "Geim jeongmal jalhasineyo!", eng: "Sei davvero brava ai giochi!", scenario: "Il tuo compagno è impressionato dai tuoi riflessi.", clue: "잘하다 (jalhada) = essere bravi a fare qualcosa" },
       { name: "Rispondere Umilmente (Gym)", hangul: "아니에요, 아직 멀었어요", romaji: "Anieyo, ajik meoreosseoyo", eng: "No, ho ancora molto da imparare/migliorare", scenario: "Ti dicono che hai un fisico perfetto, metti in atto la modestia coreana!", clue: "아직 (ajik) = ancora" },
       { name: "Gamer Toxicity (Soft)", hangul: "트롤 하지마", romaji: "Teurol hajima", eng: "Non trollare", scenario: "Il tuo compagno sta suicidandosi di proposito in bot lane.", clue: "트롤 (teurol) = troll" },
-      { name: "Gym Rat: Sudore", hangul: "땀이 많이 났어요", romaji: "Ttami mani nasseoyo", eng: "Ho sudato molto", scenario: "Hai appena concluso 40 minuti di cardio intense.", clue: "땀 (ttam) = sudore" },
+      { name: "Gym Rat: Sudore", hangul: "땀이 많이 났어요", romaji: "Ttami mani nasseoyo", eng: "Ho sudato molto", scenario: "Hai appena concluso 40 minuti di cardio intenso.", clue: "땀 (ttam) = sudore" },
       { name: "Emergenza Bagno", hangul: "여기에 휴지 있어요?", romaji: "Yeogie hyuji isseoyo?", eng: "C'è della carta igienica qui?", scenario: "I bagni della metropolitana ti colgono di sprovvista.", clue: "휴지 (hyuji) = carta igienica / fazzoletti" },
       { name: "Inviti Formali/Informali", hangul: "언제 밥 한번 먹자!", romaji: "Eonje bap hanbeon meokja!", eng: "Mangiamo insieme qualche volta! (Informale)", scenario: "Un cosplayer si congeda. È un modo di salutare comune!", clue: "밥 (bap) = riso / pasto" },
       { name: "Al Pub post-LoL", hangul: "건배!", romaji: "Geonbae!", eng: "Salute! / Brindisi!", scenario: "I tuoi nuovi amici versano il Soju per festeggiare la Promozione a Gold.", clue: "건배 (geonbae) = brindisi (vuotare il bicchiere)" },
@@ -1130,7 +1140,6 @@
         return;
       }
 
-      // LOADING OVERLAY (App Feel)
       let overlayHtml = '';
       if(state.isTransitioning) {
          overlayHtml = `
@@ -1155,12 +1164,21 @@
       root.innerHTML = `
         ${overlayHtml}
 
-        <button onclick="window.toggleDarkMode()" class="fixed top-4 right-4 z-[9999] p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-gray-100 dark:border-slate-700 transition-transform hover:scale-110 active:scale-95 outline-none flex items-center justify-center w-12 h-12">
-            <i data-lucide="${state.isDarkMode ? 'moon' : 'sun'}" class="w-6 h-6 ${state.isDarkMode ? 'text-blue-300' : 'text-yellow-500'}"></i>
-        </button>
+        <header class="app-top-bar w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 z-[9000] flex-shrink-0 pt-safe transition-colors">
+            <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="font-black text-pink-500 text-lg flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i> 
+                    <span class="hidden sm:inline">Annyeong, ${state.profileName}!</span>
+                    <span class="sm:hidden">Learn Korean</span>
+                </div>
+                <button onclick="window.toggleDarkMode()" class="p-2.5 rounded-full bg-gray-50 dark:bg-slate-800 shadow-sm border border-gray-200 dark:border-slate-700 transition-transform hover:scale-110 active:scale-95 outline-none flex items-center justify-center">
+                    <i data-lucide="${state.isDarkMode ? 'moon' : 'sun'}" class="w-5 h-5 ${state.isDarkMode ? 'text-blue-300' : 'text-yellow-500'}"></i>
+                </button>
+            </div>
+        </header>
 
-        <main class="flex-1 overflow-y-auto overscroll-y-contain w-full pb-20 md:pb-0 hide-scroll" ontouchstart="window.handleTouchStart(event)" ontouchend="window.handleTouchEnd(event)">
-            <div class="max-w-[100vw] mx-auto p-4 md:p-8 pt-4 md:pt-8 w-full relative animate-fadein">
+        <main class="flex-1 overflow-y-auto overscroll-y-contain w-full pb-20 md:pb-0 hide-scroll bg-transparent" ontouchstart="window.handleTouchStart(event)" ontouchend="window.handleTouchEnd(event)">
+            <div class="max-w-[100vw] mx-auto p-4 md:p-8 w-full relative animate-fadein">
                 ${content}
             </div>
         </main>
@@ -1200,66 +1218,62 @@
 
     const renderDashboard = () => {
       const totalProgress = Math.min((state.completedDays.length / 45) * 100, 100);
-
-      // Streak calculation (consecutive days played would require dates, we simulate a simple visual for now based on recent activity/combos)
       const currentStreak = state.completedDays.length > 0 ? (state.combo > 0 ? state.combo : 1) : 0; 
-      // We will show a daily goal tracker
       const exercisesDoneToday = state.score; 
 
       let html = `
       <div class="max-w-4xl mx-auto relative">
         <div class="hangul-watermark">가자</div>
         
-        <header class="bg-gradient-to-br from-pink-400 via-pink-300 to-blue-400 text-white rounded-[2rem] p-8 md:p-10 mb-6 korean-shadow flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
+        <header class="bg-gradient-to-br from-pink-400 via-pink-300 to-blue-400 text-white rounded-2xl md:rounded-[2rem] p-6 md:p-10 mb-6 korean-shadow flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
           <div class="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
              <i data-lucide="sparkles" class="w-48 h-48"></i>
           </div>
           <div class="z-10 w-full">
-            <h1 class="text-4xl md:text-5xl font-black mb-3 tracking-tight no-select flex justify-between items-center">
-               <span>Annyeong, ${state.profileName}! 🌸</span>
+            <h1 class="text-3xl md:text-5xl font-black mb-3 tracking-tight no-select flex justify-between items-center">
+               <span>Studio in Corso 🌸</span>
             </h1>
-            <p class="text-pink-50 text-xl font-bold mb-4">Il tuo percorso per padroneggiare il Coreano in 45 giorni.</p>
+            <p class="text-pink-50 text-base md:text-xl font-bold mb-4 leading-snug">Il tuo percorso per padroneggiare il Coreano in 45 giorni.</p>
             
             <div class="w-full max-w-md bg-white/20 h-4 rounded-full overflow-hidden backdrop-blur-sm border border-white/30">
                <div class="bg-white h-full transition-all duration-1000" style="width: ${totalProgress}%"></div>
             </div>
-            <p class="text-sm font-bold mt-2 flex items-center gap-2">
+            <p class="text-xs md:text-sm font-bold mt-2 flex items-center gap-2">
                 ${Math.round(totalProgress)}% Completato. 
-                ${totalProgress === 100 ? "Grandiosa! 화이팅! ✊" : "Forza Sara, 화이팅! (Fighting!) ✊"}
+                ${totalProgress === 100 ? "Grandiosa! 화이팅! ✊" : "Forza Sara, 화이팅! ✊"}
             </p>
           </div>
-          <div class="flex gap-4 w-full md:w-auto z-10 shrink-0">
-             <div class="flex-1 md:flex-none flex flex-col items-center justify-center bg-white/20 p-4 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner min-w-[100px]">
-              <i data-lucide="flame" class="${currentStreak > 0 ? 'text-orange-400 animate-pulse' : 'text-gray-300'} mb-1 w-10 h-10"></i>
-              <span class="font-black text-sm">${currentStreak} Streak</span>
+          <div class="flex gap-3 w-full md:w-auto z-10 shrink-0">
+             <div class="flex-1 md:flex-none flex flex-col items-center justify-center bg-white/20 p-3 md:p-4 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner min-w-[80px]">
+              <i data-lucide="flame" class="${currentStreak > 0 ? 'text-orange-400 animate-pulse' : 'text-gray-300'} mb-1 w-6 h-6 md:w-10 md:h-10"></i>
+              <span class="font-black text-xs md:text-sm">${currentStreak} Streak</span>
             </div>
-            <div class="flex-1 md:flex-none flex flex-col items-center justify-center bg-white/20 p-4 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner min-w-[100px]">
-              <i data-lucide="award" class="text-yellow-300 mb-1 w-10 h-10"></i>
-              <span class="font-black text-sm">${state.completedDays.length} / 45</span>
+            <div class="flex-1 md:flex-none flex flex-col items-center justify-center bg-white/20 p-3 md:p-4 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner min-w-[80px]">
+              <i data-lucide="award" class="text-yellow-300 mb-1 w-6 h-6 md:w-10 md:h-10"></i>
+              <span class="font-black text-xs md:text-sm">${state.completedDays.length} / 45</span>
             </div>
           </div>
         </header>
 
-        <div class="bg-white p-5 rounded-[1.5rem] shadow-sm border border-gray-100 mb-8 flex items-center justify-between gap-4">
+        <div class="bg-white p-5 rounded-2xl md:rounded-[1.5rem] shadow-sm border border-gray-100 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
            <div class="flex items-center gap-4">
-              <div class="p-3 bg-green-50 text-green-500 rounded-full"><i data-lucide="target" class="w-6 h-6"></i></div>
+              <div class="p-3 bg-green-50 text-green-500 rounded-full shrink-0"><i data-lucide="target" class="w-6 h-6"></i></div>
               <div>
-                 <h3 class="font-black text-gray-800">Obiettivo Giornaliero</h3>
-                 <p class="text-xs font-bold text-gray-400">25 Minuti / 1 Lezione completata</p>
+                 <h3 class="font-black text-gray-800 text-sm md:text-base">Obiettivo Giornaliero</h3>
+                 <p class="text-xs md:text-sm font-bold text-gray-400">25 Minuti / 1 Lezione completata</p>
               </div>
            </div>
-           <button class="bg-gray-100 text-gray-400 font-bold px-4 py-2 rounded-xl text-sm" onclick="window.haptic()">${state.completedDays.length > 0 ? '✔ Raggiunto' : 'In attesa'}</button>
+           <button class="bg-gray-100 text-gray-400 font-bold px-4 py-2 rounded-xl text-xs md:text-sm w-full sm:w-auto" onclick="window.haptic()">${state.completedDays.length > 0 ? '✔ Raggiunto' : 'In attesa'}</button>
         </div>
 
-        <div class="bg-white rounded-[2rem] korean-shadow p-6 md:p-10 mb-8 border border-blue-50 relative z-10">
-          <div class="flex justify-between items-center mb-8 border-b-2 border-blue-50 pb-4">
-            <h2 class="text-3xl font-black text-gray-800 flex items-center gap-3">
-              <i data-lucide="map" class="text-blue-400 w-8 h-8"></i> Syllabus Formativo 🗺️
+        <div class="bg-white rounded-2xl md:rounded-[2rem] korean-shadow p-5 md:p-10 mb-8 border border-blue-50 relative z-10">
+          <div class="flex justify-between items-center mb-6 border-b-2 border-blue-50 pb-4">
+            <h2 class="text-2xl md:text-3xl font-black text-gray-800 flex items-center gap-3">
+              <i data-lucide="map" class="text-blue-400 w-6 h-6 md:w-8 md:h-8"></i> Syllabus Formativo
             </h2>
           </div>
-          <p class="text-gray-500 mb-10 font-bold text-lg">Dedicaci 25-30 minuti al giorno. Il "Ripasso Dinamico" è attivo nelle lezioni avanzate!</p>
 
-          <div class="space-y-8 relative before:absolute before:inset-0 before:ml-6 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-1.5 before:bg-gradient-to-b before:from-pink-200 before:via-blue-200 before:to-gray-200 before:rounded-full">
+          <div class="space-y-6 md:space-y-8 relative before:absolute before:inset-0 before:ml-[1.35rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-1 md:before:w-1.5 before:bg-gradient-to-b before:from-pink-200 before:via-blue-200 before:to-gray-200 before:rounded-full">
       `;
 
       COURSE_DATA.forEach(dayData => {
@@ -1268,34 +1282,34 @@
         const dayMistakes = state.mistakesRecord[dayData.day] || [];
         const needsReview = isCompleted && dayMistakes.length > 0;
 
-        let circleClass = "bg-pink-500 text-white transform scale-110 shadow-lg shadow-pink-500/40 border-4 border-white";
+        let circleClass = "bg-pink-500 text-white transform md:scale-110 shadow-lg shadow-pink-500/40 border-4 border-white";
         let circleContent = dayData.day;
-        if (isCompleted) { circleClass = "bg-blue-500 text-white shadow-md border-4 border-blue-100"; circleContent = `<i data-lucide="check" class="w-6 h-6"></i>`; }
+        if (isCompleted) { circleClass = "bg-blue-500 text-white shadow-md border-4 border-blue-100"; circleContent = `<i data-lucide="check" class="w-5 h-5 md:w-6 md:h-6"></i>`; }
         else if (isLocked) { circleClass = "bg-gray-200 text-gray-400 border-4 border-white dark:bg-slate-700 dark:border-slate-800"; }
 
         let badgeHtml = '';
-        if (isCompleted && !needsReview) badgeHtml += `<span class="text-xs font-black text-blue-700 bg-blue-100 px-3 py-1 rounded-full uppercase tracking-wider">Completato</span>`;
-        if (needsReview) badgeHtml += `<span class="text-xs font-black text-orange-700 bg-orange-100 px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider"><i data-lucide="alert-circle" class="w-3 h-3"></i> Ripasso Consigliato</span>`;
-        if (isLocked) badgeHtml += `<span class="text-xs font-black text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-wider dark:bg-slate-800">Bloccato</span>`;
+        if (isCompleted && !needsReview) badgeHtml += `<span class="text-[10px] md:text-xs font-black text-blue-700 bg-blue-100 px-3 py-1 rounded-full uppercase tracking-wider">Completato</span>`;
+        if (needsReview) badgeHtml += `<span class="text-[10px] md:text-xs font-black text-orange-700 bg-orange-100 px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider"><i data-lucide="alert-circle" class="w-3 h-3"></i> Ripasso</span>`;
+        if (isLocked) badgeHtml += `<span class="text-[10px] md:text-xs font-black text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-wider dark:bg-slate-800">Bloccato</span>`;
 
         let btnHtml = '';
         if (!isLocked) {
           const btnClass = isCompleted ? 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100' : 'bg-pink-500 text-white hover:bg-pink-600 shadow-md shadow-pink-500/30';
-          const icon = needsReview ? `<i data-lucide="rotate-ccw" class="w-6 h-6"></i>` : `<i data-lucide="play" class="w-6 h-6 ml-1"></i>`;
-          btnHtml = `<button onclick="window.startDay(${dayData.day})" class="p-4 rounded-full transition-all hover:scale-110 shrink-0 ${btnClass} min-h-[56px] min-w-[56px] flex items-center justify-center">${icon}</button>`;
+          const icon = needsReview ? `<i data-lucide="rotate-ccw" class="w-5 h-5 md:w-6 md:h-6"></i>` : `<i data-lucide="play" class="w-5 h-5 md:w-6 md:h-6 ml-0.5 md:ml-1"></i>`;
+          btnHtml = `<button onclick="window.startDay(${dayData.day})" class="p-3 md:p-4 rounded-full transition-all hover:scale-110 shrink-0 ${btnClass} min-h-[48px] min-w-[48px] md:min-h-[56px] md:min-w-[56px] flex items-center justify-center outline-none">${icon}</button>`;
         }
 
         html += `
           <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group ${isLocked ? 'opacity-60 grayscale-[30%]' : ''}">
-            <div class="flex items-center justify-center w-12 h-12 rounded-full shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 font-black text-lg transition-transform ${circleClass}">
+            <div class="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 font-black text-base md:text-lg transition-transform ${circleClass}">
               ${circleContent}
             </div>
-            <div class="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] bg-white p-6 rounded-[1.5rem] shadow-sm border-2 border-gray-50 transition-all hover:shadow-lg hover:-translate-y-1 hover:border-pink-200 cursor-pointer" onclick="if(!${isLocked}) window.startDay(${dayData.day})">
-              <div class="flex justify-between items-center gap-4">
+            <div class="w-[calc(100%-3.5rem)] md:w-[calc(50%-3rem)] bg-white p-5 md:p-6 rounded-2xl md:rounded-[1.5rem] shadow-sm border-2 border-gray-50 transition-all hover:shadow-lg hover:-translate-y-1 hover:border-pink-200 cursor-pointer" onclick="if(!${isLocked}) window.startDay(${dayData.day})">
+              <div class="flex justify-between items-center gap-3 md:gap-4">
                 <div class="flex-1">
-                  <span class="text-[11px] font-black text-pink-500 uppercase tracking-widest block mb-1">${dayData.topic}</span>
-                  <h3 class="font-black text-gray-800 leading-tight mb-3 text-xl">${dayData.title}</h3>
-                  <p class="text-xs text-gray-400 font-bold mb-2 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${dayData.exercises.length} Esercizi</p>
+                  <span class="text-[10px] md:text-[11px] font-black text-pink-500 uppercase tracking-widest block mb-1">${dayData.topic}</span>
+                  <h3 class="font-black text-gray-800 leading-tight mb-2 text-lg md:text-xl">${dayData.title}</h3>
+                  <p class="text-[11px] md:text-xs text-gray-400 font-bold mb-2 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${dayData.exercises.length} Esercizi</p>
                   <div class="flex flex-wrap gap-2 mt-2">${badgeHtml}</div>
                 </div>
                 ${btnHtml}
@@ -1313,38 +1327,38 @@
       let html = `
       <div class="max-w-5xl mx-auto animate-pop">
         
-        <div class="bg-white rounded-[3rem] p-10 md:p-12 mb-10 korean-shadow border border-blue-50 text-center relative overflow-hidden">
+        <div class="bg-white rounded-2xl md:rounded-[3rem] p-6 md:p-12 mb-8 md:mb-10 korean-shadow border border-blue-50 text-center relative overflow-hidden">
           <div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMiIgZmlsbD0iI2QxZDVkYiIvPjwvc3ZnPg==')]"></div>
-          <h1 class="text-4xl md:text-5xl font-black text-gray-900 mb-4 relative z-10 flex justify-center items-center gap-3">
-             <i data-lucide="map" class="w-12 h-12 text-blue-500"></i> Korea Tour 🇰🇷
+          <h1 class="text-3xl md:text-5xl font-black text-gray-900 mb-3 md:mb-4 relative z-10 flex justify-center items-center gap-2 md:gap-3">
+             <i data-lucide="map" class="w-8 h-8 md:w-12 md:h-12 text-blue-500"></i> Korea Tour 🇰🇷
           </h1>
-          <p class="text-gray-500 text-xl font-bold relative z-10">Esplora le location del drama 2521 e i punti turistici chiave. Tocca la mappa per i dettagli o scorri le foto!</p>
+          <p class="text-gray-500 text-base md:text-xl font-bold relative z-10">Esplora le location del drama 2521 e i punti turistici chiave. Tocca la mappa per i dettagli o scorri le foto!</p>
         </div>
 
-        <div class="w-full h-[500px] md:h-[600px] rounded-[2rem] shadow-xl border-4 border-white mb-12 z-0 relative overflow-hidden bg-gray-100 flex items-center justify-center">
+        <div class="w-full h-[400px] md:h-[600px] rounded-2xl md:rounded-[2rem] shadow-xl border-4 border-white mb-8 md:mb-12 z-0 relative overflow-hidden bg-gray-100 flex items-center justify-center">
              <div id="korea-map" class="absolute inset-0 z-10"></div>
-             <i data-lucide="loader-2" class="animate-spin w-10 h-10 text-gray-400 absolute z-0"></i>
+             <i data-lucide="loader-2" class="animate-spin w-8 h-8 md:w-10 md:h-10 text-gray-400 absolute z-0"></i>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
       `;
 
       MAP_REGIONS.forEach(region => {
         html += `
-          <div class="bg-white rounded-[2rem] overflow-hidden shadow-md border-2 border-gray-50 hover:shadow-xl hover:-translate-y-1 hover:border-blue-100 transition-all group flex flex-col">
-            <div class="h-56 relative w-full overflow-hidden bg-gray-200">
+          <div class="bg-white rounded-2xl md:rounded-[2rem] overflow-hidden shadow-md border-2 border-gray-50 hover:shadow-xl hover:-translate-y-1 hover:border-blue-100 transition-all group flex flex-col">
+            <div class="h-48 md:h-56 relative w-full overflow-hidden bg-gray-200">
                <img src="${region.image}" alt="${region.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=600&q=80'" />
                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-               <span class="absolute bottom-4 left-4 text-5xl cursor-pointer hover:scale-110 transition-transform" title="Ascolta in Coreano" onclick="window.playAudio(event, '${region.name.split('(')[0].trim()}')">${region.icon}</span>
+               <span class="absolute bottom-4 left-4 text-4xl md:text-5xl cursor-pointer hover:scale-110 transition-transform" title="Ascolta in Coreano" onclick="window.playAudio(event, '${region.name.split('(')[0].trim()}')">${region.icon}</span>
             </div>
-            <div class="p-8 flex-1 flex flex-col">
-              <h2 class="text-2xl font-black text-gray-800 leading-tight mb-4">${region.name}</h2>
-              <p class="text-gray-600 font-bold text-base mb-6 leading-relaxed flex-1">${region.desc}</p>
-              <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100">
-                 <span class="text-xs font-black text-blue-500 uppercase tracking-widest mb-3 block">Highlight</span>
-                 <div class="flex flex-wrap gap-3 items-center">
-                    <span class="text-3xl hover:animate-bounce cursor-pointer">${region.emoji}</span>
-                    ${region.keywords.map(kw => `<span class="bg-white px-4 py-2 rounded-full text-sm font-bold text-gray-700 shadow-sm border border-gray-100 hover:text-blue-600 transition-colors">${kw}</span>`).join('')}
+            <div class="p-6 md:p-8 flex-1 flex flex-col">
+              <h2 class="text-xl md:text-2xl font-black text-gray-800 leading-tight mb-3 md:mb-4">${region.name}</h2>
+              <p class="text-gray-600 font-bold text-sm md:text-base mb-5 md:mb-6 leading-relaxed flex-1">${region.desc}</p>
+              <div class="bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-100">
+                 <span class="text-[10px] md:text-xs font-black text-blue-500 uppercase tracking-widest mb-3 block">Highlight</span>
+                 <div class="flex flex-wrap gap-2 md:gap-3 items-center">
+                    <span class="text-2xl md:text-3xl hover:animate-bounce cursor-pointer">${region.emoji}</span>
+                    ${region.keywords.map(kw => `<span class="bg-white px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold text-gray-700 shadow-sm border border-gray-100">${kw}</span>`).join('')}
                  </div>
               </div>
             </div>
@@ -1360,81 +1374,81 @@
       const lesson = COURSE_DATA.find(d => d.day === state.activeDay);
       
       let examplesHtml = lesson.theory.examples.map(ex => `
-        <div class="bg-white border-2 border-gray-100 p-6 rounded-[1.5rem] flex flex-col sm:flex-row sm:items-center justify-between gap-5 shadow-sm hover:shadow-md hover:border-pink-200 transition-all group">
+        <div class="bg-white border-2 border-gray-100 p-5 md:p-6 rounded-2xl md:rounded-[1.5rem] flex flex-col sm:flex-row sm:items-center justify-between gap-4 md:gap-5 shadow-sm hover:shadow-md hover:border-pink-200 transition-all group">
           <div>
-            <p class="text-3xl font-black text-gray-900 mb-2 group-hover:text-pink-600 transition-colors hangul-display">${window.renderHangul(ex.hangul)}</p>
-            <p class="text-blue-500 font-bold mb-1 tracking-wide">${ex.romaji}</p>
-            <p class="text-gray-700 font-black text-lg mb-2">"${ex.eng}"</p>
-            ${ex.context ? `<p class="text-sm text-gray-500 bg-gray-50 p-3 rounded-xl font-bold border border-gray-100 inline-block mt-2">${ex.context}</p>` : ''}
+            <p class="text-2xl md:text-3xl font-black text-gray-900 mb-1 md:mb-2 group-hover:text-pink-600 transition-colors hangul-display">${window.renderHangul(ex.hangul)}</p>
+            <p class="text-blue-500 font-bold text-sm md:text-base mb-1 tracking-wide">${ex.romaji}</p>
+            <p class="text-gray-700 font-black text-base md:text-lg mb-2">"${ex.eng}"</p>
+            ${ex.context ? `<p class="text-xs md:text-sm text-gray-500 bg-gray-50 p-2.5 md:p-3 rounded-xl font-bold border border-gray-100 inline-block mt-1 md:mt-2">${ex.context}</p>` : ''}
           </div>
-          <button onclick="window.playAudio(event, '${ex.hangul}')" class="flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 border-2 border-blue-100 text-blue-700 px-6 py-4 rounded-2xl transition-transform hover:scale-105 shrink-0 shadow-sm w-full sm:w-auto mt-4 sm:mt-0 min-h-[56px] outline-none">
-            <i data-lucide="volume-2" class="w-6 h-6"></i><span class="font-black">Ascolta</span>
+          <button onclick="window.playAudio(event, '${ex.hangul}')" class="flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 border-2 border-blue-100 text-blue-700 px-5 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl transition-transform hover:scale-105 shrink-0 shadow-sm w-full sm:w-auto mt-3 sm:mt-0 min-h-[50px] md:min-h-[56px] outline-none">
+            <i data-lucide="volume-2" class="w-5 h-5 md:w-6 md:h-6"></i><span class="font-black text-sm md:text-base">Ascolta</span>
           </button>
         </div>
       `).join('');
 
       return `
       <div class="max-w-3xl mx-auto animate-pop">
-        <button onclick="window.changeView('dashboard')" class="text-gray-500 mb-6 flex items-center hover:text-gray-800 font-black transition-colors px-4 py-2 rounded-lg hover:bg-gray-100 w-fit min-h-[44px]">
-          <i data-lucide="arrow-left" class="w-6 h-6 mr-2"></i> Torna alla Mappa
+        <button onclick="window.changeView('dashboard')" class="text-gray-500 mb-4 md:mb-6 flex items-center hover:text-gray-800 font-black text-sm md:text-base transition-colors px-3 md:px-4 py-2 rounded-lg hover:bg-gray-100 w-fit min-h-[44px] outline-none">
+          <i data-lucide="arrow-left" class="w-5 h-5 md:w-6 md:h-6 mr-2"></i> Torna alla Mappa
         </button>
 
-        <div class="bg-white rounded-[2rem] korean-shadow overflow-hidden border border-blue-50">
-          <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-8 md:p-12 relative overflow-hidden">
-            <i data-lucide="book-open" class="absolute right-0 bottom-0 w-48 h-48 opacity-10 transform translate-x-10 translate-y-10"></i>
-            <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-xs font-black tracking-widest uppercase mb-6 inline-block shadow-sm border border-white/30">
+        <div class="bg-white rounded-2xl md:rounded-[2rem] korean-shadow overflow-hidden border border-blue-50">
+          <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 md:p-12 relative overflow-hidden">
+            <i data-lucide="book-open" class="absolute right-0 bottom-0 w-32 h-32 md:w-48 md:h-48 opacity-10 transform translate-x-6 translate-y-6 md:translate-x-10 md:translate-y-10"></i>
+            <span class="bg-white/20 backdrop-blur-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase mb-4 md:mb-6 inline-block shadow-sm border border-white/30">
               Giorno ${lesson.day} • Teoria
             </span>
-            <h2 class="text-3xl md:text-5xl font-black leading-tight relative z-10">${lesson.title}</h2>
+            <h2 class="text-2xl md:text-4xl font-black leading-tight relative z-10">${lesson.title}</h2>
           </div>
           
-          <div class="p-6 md:p-12 space-y-12 text-gray-700 text-lg">
-            <div class="flex gap-5 items-start bg-pink-50 p-8 rounded-[1.5rem] border border-pink-100 shadow-sm">
-              <i data-lucide="quote" class="text-pink-500 shrink-0 mt-1 w-10 h-10"></i>
-              <p class="leading-relaxed font-bold text-pink-900 text-xl">${lesson.theory.intro}</p>
+          <div class="p-5 md:p-10 space-y-8 md:space-y-12 text-gray-700 text-base md:text-lg">
+            <div class="flex gap-4 md:gap-5 items-start bg-pink-50 p-5 md:p-8 rounded-2xl md:rounded-[1.5rem] border border-pink-100 shadow-sm">
+              <i data-lucide="quote" class="text-pink-500 shrink-0 mt-0.5 md:mt-1 w-8 h-8 md:w-10 md:h-10"></i>
+              <p class="leading-relaxed font-bold text-pink-900 text-base md:text-xl">${lesson.theory.intro}</p>
             </div>
 
             <div>
-              <h3 class="font-black text-gray-800 mb-6 flex items-center gap-3 text-2xl">
-                <div class="p-2 bg-blue-100 rounded-xl text-blue-600"><i data-lucide="brain" class="w-6 h-6"></i></div> 
+              <h3 class="font-black text-gray-800 mb-4 md:mb-6 flex items-center gap-3 text-xl md:text-2xl">
+                <div class="p-2 bg-blue-100 rounded-xl text-blue-600"><i data-lucide="brain" class="w-5 h-5 md:w-6 md:h-6"></i></div> 
                 Il Concetto Base
               </h3>
-              <p class="text-gray-600 font-bold leading-relaxed text-xl">${lesson.theory.concept}</p>
+              <p class="text-gray-600 font-bold leading-relaxed text-base md:text-xl">${lesson.theory.concept}</p>
             </div>
 
             <div>
-              <h3 class="font-black text-gray-800 mb-6 text-2xl border-b-2 pb-3 border-gray-100">Frasi Chiave 📝</h3>
-              <p class="text-sm font-bold text-pink-500 mb-4 bg-pink-50 p-4 rounded-xl border border-pink-100 flex gap-3 items-center shadow-sm">
-                 <i data-lucide="mouse-pointer-click" class="w-6 h-6 shrink-0"></i> 
+              <h3 class="font-black text-gray-800 mb-4 md:mb-6 text-xl md:text-2xl border-b-2 pb-3 border-gray-100">Frasi Chiave 📝</h3>
+              <p class="text-xs md:text-sm font-bold text-pink-500 mb-4 bg-pink-50 p-3 md:p-4 rounded-xl border border-pink-100 flex gap-3 items-start md:items-center shadow-sm">
+                 <i data-lucide="mouse-pointer-click" class="w-5 h-5 md:w-6 md:h-6 shrink-0 mt-0.5 md:mt-0"></i> 
                  <span>Tocca le parole Coreane tratteggiate per ascoltare la pronuncia! Ripeti a voce alta per creare fluidità.</span>
               </p>
-              <div class="space-y-6">
+              <div class="space-y-4 md:space-y-6">
                 ${examplesHtml}
               </div>
             </div>
             
             ${lesson.theory.builderRule ? `
-            <div class="bg-indigo-50 rounded-[1.5rem] p-8 border border-indigo-100 flex gap-5 items-start shadow-sm transform transition-all hover:scale-[1.01]">
-              <i data-lucide="link" class="text-indigo-500 shrink-0 mt-1 w-10 h-10"></i>
+            <div class="bg-indigo-50 rounded-2xl md:rounded-[1.5rem] p-5 md:p-8 border border-indigo-100 flex gap-4 md:gap-5 items-start shadow-sm transform transition-all hover:scale-[1.01]">
+              <i data-lucide="link" class="text-indigo-500 shrink-0 mt-0.5 md:mt-1 w-8 h-8 md:w-10 md:h-10"></i>
               <div>
-                <h3 class="font-black text-indigo-900 mb-2 text-xl">Conversation Builder</h3>
-                <p class="text-indigo-800 font-bold leading-relaxed text-lg">${lesson.theory.builderRule}</p>
+                <h3 class="font-black text-indigo-900 mb-1 md:mb-2 text-lg md:text-xl">Conversation Builder</h3>
+                <p class="text-indigo-800 font-bold leading-relaxed text-sm md:text-lg">${lesson.theory.builderRule}</p>
               </div>
             </div>
             ` : ''}
 
-            <div class="bg-green-50 rounded-[1.5rem] p-8 border border-green-100 flex gap-5 items-start shadow-sm">
-              <i data-lucide="leaf" class="text-green-600 shrink-0 mt-1 w-10 h-10"></i>
+            <div class="bg-green-50 rounded-2xl md:rounded-[1.5rem] p-5 md:p-8 border border-green-100 flex gap-4 md:gap-5 items-start shadow-sm">
+              <i data-lucide="leaf" class="text-green-600 shrink-0 mt-0.5 md:mt-1 w-8 h-8 md:w-10 md:h-10"></i>
               <div>
-                <h3 class="font-black text-green-900 mb-2 text-xl">Dettaglio Culturale 🎎</h3>
-                <p class="text-green-800 font-bold leading-relaxed">${lesson.theory.culture}</p>
+                <h3 class="font-black text-green-900 mb-1 md:mb-2 text-lg md:text-xl">Dettaglio Culturale 🎎</h3>
+                <p class="text-green-800 font-bold leading-relaxed text-sm md:text-lg">${lesson.theory.culture}</p>
               </div>
             </div>
           </div>
 
-          <div class="p-6 md:p-10 bg-gray-50 border-t-2 border-gray-100 flex justify-end">
-            <button onclick="window.startGame()" class="bg-pink-500 hover:bg-pink-600 text-white px-10 py-5 rounded-2xl font-black text-xl shadow-lg shadow-pink-500/30 flex items-center justify-center gap-3 transition-transform transform hover:scale-105 w-full md:w-auto min-h-[70px] outline-none">
-              Inizia la Pratica (${lesson.exercises.length} Es) <i data-lucide="play-circle" class="w-8 h-8"></i>
+          <div class="p-5 md:p-10 bg-gray-50 border-t-2 border-gray-100 flex justify-end">
+            <button onclick="window.startGame()" class="bg-pink-500 hover:bg-pink-600 text-white px-6 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl font-black text-lg md:text-xl shadow-lg shadow-pink-500/30 flex items-center justify-center gap-3 transition-transform transform hover:scale-105 w-full md:w-auto min-h-[60px] md:min-h-[70px] outline-none">
+              Inizia la Pratica (${lesson.exercises.length} Es) <i data-lucide="play-circle" class="w-6 h-6 md:w-8 md:h-8"></i>
             </button>
           </div>
         </div>
@@ -1467,33 +1481,33 @@
       let builderHint = '';
 
       if (exercise.type === 'listen' && !isAnswered) {
-          builderHint = `<div class="bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-3 rounded-xl text-sm font-bold flex gap-3 shadow-sm mt-6"><i data-lucide="headphones" class="w-5 h-5 shrink-0"></i> Tecnica Shadowing: Ascolta l'audio 2-3 volte, poi prova a ripeterlo ad alta voce prima di rispondere. Ti aiuterà immensamente per le conversazioni!</div>`;
+          builderHint = `<div class="bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 md:px-4 py-3 rounded-xl text-xs md:text-sm font-bold flex gap-2 md:gap-3 shadow-sm mt-5 md:mt-6"><i data-lucide="headphones" class="w-4 h-4 md:w-5 md:h-5 shrink-0"></i> Tecnica Shadowing: Ascolta l'audio 2-3 volte, poi prova a ripeterlo ad alta voce prima di rispondere.</div>`;
       } else if (exercise.type === 'conversation' && !isAnswered && state.activeDay > 1) {
-          builderHint = `<div class="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded-xl text-sm font-bold flex gap-3 shadow-sm mt-6"><i data-lucide="message-circle" class="w-5 h-5 shrink-0"></i> Conversation Builder: Pensa a come potresti concatenare questa risposta con il tuo saluto o la tua introduzione del Giorno 1 e 2!</div>`;
+          builderHint = `<div class="bg-orange-50 border border-orange-200 text-orange-800 px-3 md:px-4 py-3 rounded-xl text-xs md:text-sm font-bold flex gap-2 md:gap-3 shadow-sm mt-5 md:mt-6"><i data-lucide="message-circle" class="w-4 h-4 md:w-5 md:h-5 shrink-0"></i> Conversation Builder: Pensa a come potresti concatenare questa risposta con il tuo saluto del Giorno 1!</div>`;
       }
 
       let contextHtml = '';
       if (exercise.type === 'conversation' && exercise.context) {
         contextHtml = `
-          <div class="mb-10 w-full flex justify-start">
-            <div class="chat-bubble bg-orange-50 border-2 border-orange-200 p-6 rounded-2xl rounded-bl-none shadow-sm relative w-11/12 md:w-3/4">
-              <p class="text-orange-900 font-bold text-lg">${exercise.context}</p>
+          <div class="mb-6 md:mb-10 w-full flex justify-start">
+            <div class="chat-bubble bg-orange-50 border-2 border-orange-200 p-4 md:p-6 rounded-2xl rounded-bl-none shadow-sm relative w-11/12 md:w-3/4">
+              <p class="text-orange-900 font-bold text-sm md:text-lg">${exercise.context}</p>
             </div>
           </div>
         `;
       }
 
       if (exercise.type === 'multiple_choice' || exercise.type === 'listen' || exercise.type === 'conversation') {
-        exerciseHtml = `<div class="space-y-4">` + exercise.options.map((opt, i) => {
+        exerciseHtml = `<div class="space-y-3 md:space-y-4">` + exercise.options.map((opt, i) => {
           let btnClass = "bg-white border-2 border-gray-200 text-gray-700 hover:border-pink-400 hover:bg-pink-50";
           let iconHtml = '';
           if (isAnswered) {
             if (i === exercise.answer) {
-              btnClass = "bg-green-50 border-2 border-green-500 text-green-900 shadow-md transform scale-[1.02] z-10";
-              iconHtml = `<i data-lucide="check-circle-2" class="text-green-500 w-8 h-8 animate-pop"></i>`;
+              btnClass = "bg-green-50 border-2 border-green-500 text-green-900 shadow-md transform md:scale-[1.02] z-10";
+              iconHtml = `<i data-lucide="check-circle-2" class="text-green-500 w-6 h-6 md:w-8 md:h-8 animate-pop"></i>`;
             } else if (i === state.selectedAnswer) {
               btnClass = "bg-rose-50 border-2 border-rose-500 text-rose-900";
-              iconHtml = `<i data-lucide="x-circle" class="text-rose-500 w-8 h-8"></i>`;
+              iconHtml = `<i data-lucide="x-circle" class="text-rose-500 w-6 h-6 md:w-8 md:h-8"></i>`;
             } else {
               btnClass = "bg-gray-50 border-2 border-gray-100 text-gray-400 opacity-60";
             }
@@ -1502,8 +1516,8 @@
           let optionAudioBtn = '';
           if (exercise.optionsHangul && exercise.optionsHangul[i]) {
             optionAudioBtn = `
-              <button onclick="window.playAudio(event, '${exercise.optionsHangul[i]}')" class="p-4 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-200 transition-colors shrink-0 z-10 border border-blue-100 mr-4 shadow-sm min-h-[50px] min-w-[50px] flex items-center justify-center outline-none">
-                 <i data-lucide="volume-2" class="w-6 h-6"></i>
+              <button onclick="window.playAudio(event, '${exercise.optionsHangul[i]}')" class="p-3 md:p-4 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-200 transition-colors shrink-0 z-10 border border-blue-100 mr-3 md:mr-4 shadow-sm min-h-[44px] min-w-[44px] md:min-h-[50px] md:min-w-[50px] flex items-center justify-center outline-none">
+                 <i data-lucide="volume-2" class="w-5 h-5 md:w-6 md:h-6"></i>
               </button>
             `;
           }
@@ -1512,11 +1526,11 @@
           const optionText = hasHangul ? window.renderHangul(opt) : opt;
 
           return `
-            <div class="relative w-full rounded-[1.2rem] transition-all cursor-pointer shadow-sm hover:shadow-md min-h-[80px] flex items-center ${btnClass}" onclick="if(!${isAnswered}) window.handleMultipleChoiceAnswer(${i})">
-              <div class="flex items-center w-full p-4 md:p-6 h-full">
+            <div class="relative w-full rounded-[1rem] md:rounded-[1.2rem] transition-all cursor-pointer shadow-sm hover:shadow-md min-h-[70px] md:min-h-[80px] flex items-center ${btnClass}" onclick="if(!${isAnswered}) window.handleMultipleChoiceAnswer(${i})">
+              <div class="flex items-center w-full p-3 md:p-6 h-full">
                 ${optionAudioBtn}
-                <span class="font-black text-xl md:text-2xl flex-grow leading-tight ${hasHangul ? 'hangul-display' : ''}">${optionText}</span>
-                <div class="flex items-center gap-3 shrink-0 ml-4">
+                <span class="font-black text-lg md:text-2xl flex-grow leading-tight ${hasHangul ? 'hangul-display' : ''}">${optionText}</span>
+                <div class="flex items-center gap-2 md:gap-3 shrink-0 ml-2 md:ml-4">
                   ${iconHtml}
                 </div>
               </div>
@@ -1526,30 +1540,30 @@
       } else if (exercise.type === 'speak') {
         if(state.fallbackActive && !isAnswered) {
             exerciseHtml = `
-            <div class="space-y-4 w-full animate-pop">
-                <p class="text-sm font-bold text-orange-600 bg-orange-50 p-4 rounded-xl border border-orange-200 mb-6 shadow-sm flex items-start gap-3 leading-relaxed">
-                    <i data-lucide="info" class="w-5 h-5 shrink-0 mt-0.5"></i> Scegli la <b>pronuncia fonetica esatta</b> per proseguire! L'audio si attiverà se indovini.
+            <div class="space-y-3 md:space-y-4 w-full animate-pop">
+                <p class="text-xs md:text-sm font-bold text-orange-600 bg-orange-50 p-3 md:p-4 rounded-xl border border-orange-200 mb-4 md:mb-6 shadow-sm flex items-start gap-2 md:gap-3 leading-relaxed">
+                    <i data-lucide="info" class="w-4 h-4 md:w-5 md:h-5 shrink-0 mt-0.5"></i> Scegli la <b>pronuncia fonetica esatta</b> per proseguire! L'audio si attiverà se indovini.
                 </p>
                 ${state.fallbackOptions.map((opt, i) => `
-                    <button onclick="window.handleFallbackAnswer(${i})" class="w-full text-left p-6 rounded-[1.2rem] border-2 border-gray-200 hover:border-pink-400 hover:bg-pink-50 font-black text-xl md:text-2xl transition-all shadow-sm flex items-center justify-between text-gray-800 min-h-[80px]">
-                        <span class="break-words mr-4">${opt}</span> <i data-lucide="ear" class="w-6 h-6 text-pink-400 shrink-0"></i>
+                    <button onclick="window.handleFallbackAnswer(${i})" class="w-full text-left p-4 md:p-6 rounded-[1rem] md:rounded-[1.2rem] border-2 border-gray-200 hover:border-pink-400 hover:bg-pink-50 font-black text-lg md:text-2xl transition-all shadow-sm flex items-center justify-between text-gray-800 min-h-[70px] md:min-h-[80px] outline-none">
+                        <span class="break-words mr-3 md:mr-4">${opt}</span> <i data-lucide="ear" class="w-5 h-5 md:w-6 md:h-6 text-pink-400 shrink-0"></i>
                     </button>
                 `).join('')}
             </div>
             `;
         } else {
             const btnClasses = state.isRecording ? 'bg-pink-500 scale-110 shadow-2xl shadow-pink-500/50 recording-pulse border-white border-4' : isAnswered ? 'bg-gray-200 text-gray-400' : 'bg-blue-500 hover:bg-blue-600 text-white shadow-xl hover:scale-105 border-4 border-blue-200';
-            const msg = state.isRecording ? "Ti sto ascoltando... Parla chiaro!" : isAnswered ? "Analisi completata." : "Tocca per parlare in Coreano";
+            const msg = state.isRecording ? "Ti sto ascoltando..." : isAnswered ? "Analisi completata." : "Tocca per parlare";
             exerciseHtml = `
-            <div class="flex flex-col items-center justify-center mt-12 space-y-8 bg-gray-50 p-10 rounded-[2.5rem] border-2 border-dashed border-gray-200 min-h-[300px] relative">
+            <div class="flex flex-col items-center justify-center mt-6 md:mt-12 space-y-6 md:space-y-8 bg-gray-50 p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] border-2 border-dashed border-gray-200 min-h-[250px] md:min-h-[300px] relative">
                 <button ${isAnswered || state.isRecording ? 'disabled' : ''} 
                 onmousedown="window.handleSpeechRecognition(event)" 
                 ontouchstart="window.handleSpeechRecognition(event)" 
-                class="relative w-40 h-40 rounded-full flex items-center justify-center transition-all ${btnClasses} no-select outline-none">
-                <i data-lucide="mic" class="w-16 h-16 ${state.isRecording ? 'animate-bounce' : ''}"></i>
+                class="relative w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center transition-all ${btnClasses} no-select outline-none">
+                <i data-lucide="mic" class="w-12 h-12 md:w-16 md:h-16 ${state.isRecording ? 'animate-bounce' : ''}"></i>
                 </button>
-                <p class="text-gray-600 font-black text-center text-xl">${msg}</p>
-                ${(!isAnswered && !state.isRecording) ? `<button onclick="window.triggerSpeechFallback()" class="absolute bottom-4 right-4 text-xs font-bold text-gray-400 hover:text-gray-600 bg-white border border-gray-200 px-4 py-3 min-h-[44px] rounded-lg shadow-sm transition-colors outline-none">Salta / Alternativa</button>` : ''}
+                <p class="text-gray-600 font-black text-center text-lg md:text-xl">${msg}</p>
+                ${(!isAnswered && !state.isRecording) ? `<button onclick="window.triggerSpeechFallback()" class="absolute bottom-3 right-3 md:bottom-4 md:right-4 text-[10px] md:text-xs font-bold text-gray-400 hover:text-gray-600 bg-white border border-gray-200 px-3 md:px-4 py-2 md:py-3 rounded-lg shadow-sm transition-colors outline-none">Salta / Alternativa</button>` : ''}
             </div>
             `;
         }
@@ -1558,46 +1572,46 @@
       const feedbackClass = isCorrect ? 'bg-green-50 border-green-200 text-green-900' : 'bg-rose-50 border-rose-200 text-rose-900';
       const iconClass = isCorrect ? 'bg-green-500' : 'bg-rose-500';
       const iconType = isCorrect ? 'check' : 'message-circle-warning';
-      const headingText = isCorrect ? 'Perfetto, Sara! 🎉 화이팅! (Fighting!) ✊' : 'Oops, non ti arrendere! 화이팅! (Fighting!) 💪';
+      const headingText = isCorrect ? 'Perfetto, Sara! 🎉' : 'Oops, non ti arrendere! 💪';
       const btnFeedClass = isCorrect ? 'bg-green-500 hover:bg-green-600 shadow-green-500/30' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/30';
-      const btnText = state.gameStep === lesson.exercises.length - 1 ? 'Termina Lezione e Salva' : 'Prossima Domanda';
+      const btnText = state.gameStep === lesson.exercises.length - 1 ? 'Termina Lezione' : 'Prossima Domanda';
 
       return `
       <div class="max-w-2xl mx-auto animate-pop">
         
-        <div class="flex justify-between items-center mb-6 px-2">
-            <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
-                <i data-lucide="flame" class="w-6 h-6 ${state.combo > 1 ? 'text-orange-500 animate-pulse' : 'text-gray-300'}"></i>
-                <span class="font-black text-lg ${state.combo > 1 ? 'text-orange-600' : 'text-gray-400'}">Streak: ${state.combo}</span>
+        <div class="flex justify-between items-center mb-4 md:mb-6 px-1 md:px-2">
+            <div class="flex items-center gap-2 bg-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl shadow-sm border border-gray-100">
+                <i data-lucide="flame" class="w-5 h-5 md:w-6 md:h-6 ${state.combo > 1 ? 'text-orange-500 animate-pulse' : 'text-gray-300'}"></i>
+                <span class="font-black text-sm md:text-lg ${state.combo > 1 ? 'text-orange-600' : 'text-gray-400'}">Streak: ${state.combo}</span>
             </div>
-            <span class="font-black text-gray-500 text-lg bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">${state.gameStep + 1} / ${lesson.exercises.length}</span>
+            <span class="font-black text-gray-500 text-sm md:text-lg bg-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl shadow-sm border border-gray-100">${state.gameStep + 1} / ${lesson.exercises.length}</span>
         </div>
 
-        <div class="mb-8 flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
-          <div class="flex-grow bg-gray-100 h-5 rounded-xl overflow-hidden shadow-inner">
+        <div class="mb-6 md:mb-8 flex items-center gap-4 bg-white p-2 md:p-3 rounded-2xl shadow-sm border border-gray-100">
+          <div class="flex-grow bg-gray-100 h-3 md:h-5 rounded-xl overflow-hidden shadow-inner">
             <div class="bg-gradient-to-r from-blue-400 to-pink-500 h-full transition-all duration-700 ease-out" style="width: ${progressWidth}%"></div>
           </div>
         </div>
 
-        <div class="bg-white rounded-[2.5rem] korean-shadow p-6 md:p-12 min-h-[550px] flex flex-col border border-blue-50 relative overflow-hidden">
+        <div class="bg-white rounded-2xl md:rounded-[2.5rem] korean-shadow p-5 md:p-12 min-h-[450px] md:min-h-[550px] flex flex-col border border-blue-50 relative overflow-hidden">
           <div class="flex-grow z-10">
-            <div class="flex justify-center mb-10">
-               <span class="${typeColor} text-sm font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-sm border flex items-center gap-2 text-center">
-                 <i data-lucide="${typeIcon}" class="w-4 h-4 shrink-0"></i> ${typeLabel}
+            <div class="flex justify-center mb-6 md:mb-10">
+               <span class="${typeColor} text-[10px] md:text-sm font-black px-4 md:px-6 py-1.5 md:py-2 rounded-full uppercase tracking-widest shadow-sm border flex items-center gap-2 text-center">
+                 <i data-lucide="${typeIcon}" class="w-3 h-3 md:w-4 md:h-4 shrink-0"></i> ${typeLabel}
                </span>
             </div>
 
             ${exercise.type === 'listen' ? `
-              <div class="flex justify-center mb-6">
-                <button onclick="window.playAudio(event, '${exercise.audioHangul}')" class="flex items-center justify-center gap-4 bg-pink-500 hover:bg-pink-600 text-white px-10 py-6 rounded-full transition-transform hover:scale-105 shadow-xl shadow-pink-500/30 w-full sm:w-auto outline-none">
-                  <i data-lucide="volume-2" class="w-10 h-10 animate-pulse"></i><span class="font-black text-2xl">Riproduci Audio</span>
+              <div class="flex justify-center mb-5 md:mb-6">
+                <button onclick="window.playAudio(event, '${exercise.audioHangul}')" class="flex items-center justify-center gap-3 md:gap-4 bg-pink-500 hover:bg-pink-600 text-white px-6 md:px-10 py-4 md:py-6 rounded-full transition-transform hover:scale-105 shadow-xl shadow-pink-500/30 w-full sm:w-auto outline-none">
+                  <i data-lucide="volume-2" class="w-6 h-6 md:w-10 md:h-10 animate-pulse"></i><span class="font-black text-lg md:text-2xl">Riproduci Audio</span>
                 </button>
               </div>
             ` : ''}
 
             ${contextHtml}
             
-            <h2 class="text-2xl md:text-3xl lg:text-4xl font-black text-gray-800 mb-8 text-center leading-snug">
+            <h2 class="text-xl md:text-3xl lg:text-4xl font-black text-gray-800 mb-6 md:mb-8 text-center leading-snug">
               ${exercise.question}
             </h2>
 
@@ -1605,25 +1619,22 @@
             ${builderHint}
           </div>
 
-          <div class="mt-12 transition-all duration-500 z-10 ${isAnswered ? 'opacity-100 translate-y-0 block' : 'opacity-0 translate-y-4 hidden'}">
-            <div class="p-6 md:p-8 rounded-[1.5rem] flex flex-col sm:flex-row gap-5 items-start shadow-sm border-2 ${feedbackClass}">
-              <div class="p-4 rounded-full text-white shrink-0 shadow-md ${iconClass}">
-                  <i data-lucide="${iconType}" class="w-8 h-8"></i>
+          <div class="mt-8 md:mt-12 transition-all duration-500 z-10 ${isAnswered ? 'opacity-100 translate-y-0 block' : 'opacity-0 translate-y-4 hidden'}">
+            <div class="p-5 md:p-8 rounded-2xl md:rounded-[1.5rem] flex flex-col sm:flex-row gap-4 md:gap-5 items-start shadow-sm border-2 ${feedbackClass}">
+              <div class="p-3 md:p-4 rounded-full text-white shrink-0 shadow-md ${iconClass}">
+                  <i data-lucide="${iconType}" class="w-6 h-6 md:w-8 md:h-8"></i>
               </div>
               <div class="flex-grow w-full">
-                <h4 class="font-black text-2xl mb-3">${headingText}</h4>
-                <p class="font-bold text-lg mb-2 text-gray-800">${isCorrect ? "Ottima risposta, vai avanti così." : exercise.feedback_incorrect}</p>
-                ${!isCorrect && exercise.tip ? `<div class="bg-white/50 p-4 rounded-xl border border-white/40 mt-3 font-bold text-sm md:text-md text-gray-700 shadow-inner break-words w-full"><strong>💡 Hint del Sensei:</strong><br/>${exercise.tip}</div>` : ''}
+                <h4 class="font-black text-xl md:text-2xl mb-1 md:mb-3">${headingText}</h4>
+                <p class="font-bold text-sm md:text-lg mb-2 text-gray-800">${isCorrect ? "Ottima risposta, vai avanti così." : exercise.feedback_incorrect}</p>
+                ${!isCorrect && exercise.tip ? `<div class="bg-white/50 p-3 md:p-4 rounded-xl border border-white/40 mt-2 md:mt-3 font-bold text-xs md:text-md text-gray-700 shadow-inner break-words w-full"><strong>💡 Hint del Sensei:</strong><br/>${exercise.tip}</div>` : ''}
               </div>
             </div>
-            <button onclick="window.nextQuestion()" class="w-full mt-6 py-6 rounded-2xl font-black text-2xl text-white shadow-xl transition-transform transform hover:scale-[1.02] min-h-[70px] ${btnFeedClass} outline-none">
+            <button onclick="window.nextQuestion()" class="w-full mt-4 md:mt-6 py-4 md:py-6 rounded-xl md:rounded-2xl font-black text-lg md:text-2xl text-white shadow-xl transition-transform transform hover:scale-[1.02] min-h-[60px] md:min-h-[70px] ${btnFeedClass} outline-none">
               ${btnText}
             </button>
           </div>
         </div>
-        <p class="text-center text-gray-400 text-xs mt-6 font-bold flex justify-center items-center gap-2 opacity-50 md:hidden">
-            <i data-lucide="move-horizontal" class="w-4 h-4"></i> Scorri a sinistra per procedere
-        </p>
       </div>
       `;
     };
@@ -1636,56 +1647,56 @@
       const adminCode = window._s_k_d[state.activeDay];
 
       const mistakesHtml = state.currentMistakes.length > 0 
-        ? `<div class="bg-rose-50 border-2 border-rose-200 text-rose-900 p-6 rounded-2xl mb-10 text-left shadow-sm">
-             <span class="font-black block mb-3 text-lg flex items-center gap-2"><i data-lucide="book-open" class="w-6 h-6"></i> Heatmap: Punti deboli da ripassare:</span>
-             <div class="flex flex-wrap gap-2 mt-4">
-               ${[...new Set(state.currentMistakes)].map(m => `<span class="bg-rose-200 text-rose-800 px-3 py-1 rounded-full font-bold text-sm shadow-sm">${m}</span>`).join('')}
+        ? `<div class="bg-rose-50 border-2 border-rose-200 text-rose-900 p-4 md:p-6 rounded-2xl mb-8 md:mb-10 text-left shadow-sm">
+             <span class="font-black block mb-2 md:mb-3 text-sm md:text-lg flex items-center gap-2"><i data-lucide="book-open" class="w-5 h-5 md:w-6 md:h-6"></i> Heatmap: Punti deboli da ripassare:</span>
+             <div class="flex flex-wrap gap-2 mt-2 md:mt-4">
+               ${[...new Set(state.currentMistakes)].map(m => `<span class="bg-rose-200 text-rose-800 px-2 md:px-3 py-1 rounded-full font-bold text-xs md:text-sm shadow-sm">${m}</span>`).join('')}
              </div>
            </div>` 
         : '';
         
       const finalMissionText = state.activeDay <= 5 
-        ? "Registra mentalmente o ad alta voce un monologo di 20 secondi: immagina di entrare in palestra o al PC Bang, fai un saluto, presentati velocemente e usa le formule apprese oggi per essere educata."
-        : `Sfida di 20 secondi: Fai finta di vivere ora la situazione "${lesson.topic}". Saluta in coreano, chiedi o dì "${lesson.theory.examples[0].eng}", poi ringrazia cordialmente. Parla forte e chiaro!`;
+        ? "Registra mentalmente o ad alta voce un monologo: immagina di entrare in palestra o al PC Bang, presentati velocemente e saluta."
+        : `Sfida: Fai finta di vivere ora la situazione "${lesson.topic}". Saluta, chiedi "${lesson.theory.examples[0].eng}", poi ringrazia. Parla forte e chiaro!`;
 
       return `
-      <div class="max-w-lg mx-auto text-center px-4 animate-pop">
-        <div class="bg-white rounded-[3rem] korean-shadow p-10 md:p-16 border border-blue-50 relative overflow-hidden mt-4">
+      <div class="max-w-lg mx-auto text-center px-2 md:px-4 animate-pop">
+        <div class="bg-white rounded-3xl md:rounded-[3rem] korean-shadow p-8 md:p-16 border border-blue-50 relative overflow-hidden mt-4">
           
           <div class="absolute inset-0 z-0 pointer-events-none opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMiIgZmlsbD0iI2QxZDVkYiIvPjwvc3ZnPg==')]"></div>
 
-          <div class="w-32 h-32 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-500 text-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-yellow-500/40 relative z-10 animate-pop">
-            <i data-lucide="trophy" class="w-16 h-16"></i>
+          <div class="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-500 text-white rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-2xl shadow-yellow-500/40 relative z-10 animate-pop">
+            <i data-lucide="trophy" class="w-12 h-12 md:w-16 md:h-16"></i>
           </div>
-          <h2 class="text-4xl md:text-5xl font-black text-gray-900 mb-3 relative z-10">Lezione Completata!</h2>
-          <p class="text-blue-500 mb-10 font-black uppercase tracking-widest text-sm relative z-10">Giorno ${state.activeDay}: ${lesson.topic}</p>
+          <h2 class="text-3xl md:text-5xl font-black text-gray-900 mb-2 md:mb-3 relative z-10">Lezione Completata!</h2>
+          <p class="text-blue-500 mb-8 md:mb-10 font-black uppercase tracking-widest text-[10px] md:text-sm relative z-10">Giorno ${state.activeDay}: ${lesson.topic}</p>
           
-          <div class="text-[5rem] font-black text-pink-500 mb-6 drop-shadow-md relative z-10 leading-none">${state.score}<span class="text-4xl text-gray-400">/${total}</span></div>
+          <div class="text-[4rem] md:text-[5rem] font-black text-pink-500 mb-4 md:mb-6 drop-shadow-md relative z-10 leading-none">${state.score}<span class="text-3xl md:text-4xl text-gray-400">/${total}</span></div>
           
           ${mistakesHtml}
 
-          <p class="text-xl font-bold text-gray-600 mb-8 leading-relaxed relative z-10">
+          <p class="text-base md:text-xl font-bold text-gray-600 mb-6 md:mb-8 leading-relaxed relative z-10">
             ${isPerfect ? "Sei stata IMPECCABILE, Sara! Zero errori, pronta per un K-Drama o un game a LoL senza sottotitoli. 🌸 화이팅! ✊" : "Ottimo sforzo! Non demordere, ricorda lo spirito sportivo dei K-Drama: 화이팅! (Fighting!) ✊ Gli errori si sistemano con la Ripetizione Spaziata."}
           </p>
 
-          <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-3xl border border-indigo-100 mb-10 shadow-md relative z-10 text-left">
-             <div class="flex items-center justify-between mb-4">
-                 <span class="font-black text-indigo-900 flex items-center gap-2 text-lg"><i data-lucide="mic-2" class="w-6 h-6 text-indigo-500"></i> Roleplay: Parla Davvero</span>
-                 <span class="bg-indigo-600 text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm">Task Finale</span>
+          <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-indigo-100 mb-8 md:mb-10 shadow-md relative z-10 text-left">
+             <div class="flex items-center justify-between mb-3 md:mb-4">
+                 <span class="font-black text-indigo-900 flex items-center gap-2 text-sm md:text-lg"><i data-lucide="mic-2" class="w-5 h-5 md:w-6 md:h-6 text-indigo-500"></i> Roleplay</span>
+                 <span class="bg-indigo-600 text-white text-[8px] md:text-[10px] font-black px-2 md:px-3 py-1 md:py-1.5 rounded-full uppercase tracking-widest shadow-sm">Task Finale</span>
              </div>
-             <p class="text-indigo-800 font-bold text-base leading-relaxed mb-6">${finalMissionText}</p>
-             <button onclick="window.haptic([50, 100, 50]); this.innerHTML='<i data-lucide=\\'check-circle\\' class=\\'w-6 h-6\\'></i> Monologo Completato!'; this.classList.replace('bg-white', 'bg-green-500'); this.classList.replace('text-indigo-600', 'text-white'); lucide.createIcons();" class="w-full bg-white border-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 py-4 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 shadow-sm outline-none active:scale-95">
-                 <i data-lucide="play-circle" class="w-6 h-6"></i> Ho parlato per 20 secondi
+             <p class="text-indigo-800 font-bold text-xs md:text-base leading-relaxed mb-4 md:mb-6">${finalMissionText}</p>
+             <button onclick="window.haptic([50, 100, 50]); this.innerHTML='<i data-lucide=\\'check-circle\\' class=\\'w-5 h-5 md:w-6 md:h-6\\'></i> Fatto!'; this.classList.replace('bg-white', 'bg-green-500'); this.classList.replace('text-indigo-600', 'text-white'); lucide.createIcons();" class="w-full bg-white border-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-sm md:text-lg transition-all flex items-center justify-center gap-2 md:gap-3 shadow-sm outline-none active:scale-95">
+                 <i data-lucide="play-circle" class="w-5 h-5 md:w-6 md:h-6"></i> Ho parlato per 20 secondi
              </button>
           </div>
 
-          <div class="bg-gray-100 p-4 rounded-xl mb-12 border border-gray-200 relative z-10 text-sm font-bold text-gray-600 text-left shadow-sm">
-             <i data-lucide="key" class="w-5 h-5 inline text-pink-500 mb-1"></i> Codice Segreto salvataggio: <span class="font-mono bg-white px-2 py-1 rounded shadow-sm text-pink-600 select-all border border-pink-100">${adminCode}</span>
-             <div class="text-xs text-gray-400 mt-2 font-normal">Inseriscilo nel "Profilo" da un altro dispositivo per sbloccare automaticamente questo livello se perdi i dati.</div>
+          <div class="bg-gray-100 p-3 md:p-4 rounded-xl mb-8 md:mb-12 border border-gray-200 relative z-10 text-xs md:text-sm font-bold text-gray-600 text-left shadow-sm">
+             <i data-lucide="key" class="w-4 h-4 md:w-5 md:h-5 inline text-pink-500 mb-0.5 md:mb-1"></i> Codice Segreto salvataggio: <span class="font-mono bg-white px-2 py-1 rounded shadow-sm text-pink-600 select-all border border-pink-100">${adminCode}</span>
+             <div class="text-[10px] md:text-xs text-gray-400 mt-1.5 md:mt-2 font-normal">Inseriscilo nel "Profilo" da un altro dispositivo per sbloccare automaticamente questo livello.</div>
           </div>
 
-          <button onclick="window.changeView('dashboard')" class="w-full bg-gray-900 hover:bg-black text-white py-6 rounded-2xl font-black text-2xl shadow-xl transition-transform transform hover:scale-[1.02] relative z-10 flex justify-center items-center gap-3 min-h-[70px] outline-none">
-            <i data-lucide="map" class="w-7 h-7"></i> Salva e Torna al Percorso
+          <button onclick="window.changeView('dashboard')" class="w-full bg-gray-900 hover:bg-black text-white py-4 md:py-6 rounded-xl md:rounded-2xl font-black text-lg md:text-2xl shadow-xl transition-transform transform hover:scale-[1.02] relative z-10 flex justify-center items-center gap-2 md:gap-3 min-h-[60px] md:min-h-[70px] outline-none">
+            <i data-lucide="map" class="w-6 h-6 md:w-7 md:h-7"></i> Salva e Torna al Percorso
           </button>
         </div>
       </div>
@@ -1696,91 +1707,91 @@
       let html = `
       <div class="max-w-5xl mx-auto animate-pop">
         
-        <div class="bg-white p-8 md:p-10 rounded-[2.5rem] korean-shadow border border-blue-50 mb-12 relative overflow-hidden">
-          <div class="absolute right-0 top-0 w-64 h-64 bg-gradient-to-bl from-pink-50 to-transparent rounded-bl-full -z-10"></div>
+        <div class="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] korean-shadow border border-blue-50 mb-8 md:mb-12 relative overflow-hidden">
+          <div class="absolute right-0 top-0 w-48 h-48 md:w-64 md:h-64 bg-gradient-to-bl from-pink-50 to-transparent rounded-bl-full -z-10"></div>
           
-          <h2 class="text-3xl font-black text-gray-900 mb-3 flex items-center gap-3">
-            <div class="p-3 bg-pink-100 text-pink-600 rounded-2xl"><i data-lucide="bot" class="w-8 h-8"></i></div> 
-            Traduttore Intelligente AI
+          <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-2 md:mb-3 flex items-center gap-2 md:gap-3">
+            <div class="p-2 md:p-3 bg-pink-100 text-pink-600 rounded-xl md:rounded-2xl"><i data-lucide="bot" class="w-6 h-6 md:w-8 md:h-8"></i></div> 
+            Traduttore AI
           </h2>
-          <p class="text-gray-500 font-bold mb-8 text-lg">Scrivi in Italiano. Otterrai Hangul, romanizzazione e audio per salvarti in ogni situazione in Corea.</p>
+          <p class="text-gray-500 font-bold mb-6 md:mb-8 text-sm md:text-lg">Scrivi in Italiano. Otterrai Hangul, romanizzazione e audio per salvarti in Corea.</p>
           
-          <div class="flex flex-col md:flex-row gap-4 mb-4 z-10 relative">
-            <input type="text" id="transInput" value="${state.transInput}" onchange="state.transInput = this.value" placeholder="es., Quanto costa un biglietto per il treno?" class="flex-grow border-2 border-gray-200 rounded-2xl p-5 text-xl font-bold text-gray-800 focus:border-pink-500 focus:ring-4 focus:ring-pink-100 outline-none transition-all shadow-sm min-h-[60px]" />
-            <button onclick="window.runTranslation()" class="bg-pink-500 hover:bg-pink-600 text-white px-10 py-5 rounded-2xl font-black text-xl transition-transform hover:scale-105 shadow-xl shadow-pink-500/30 flex justify-center items-center gap-3 min-h-[60px] outline-none">
-              ${state.transLoading ? `<i data-lucide="loader-2" class="animate-spin w-6 h-6"></i>` : `<i data-lucide="languages" class="w-6 h-6"></i> Traduci`}
+          <div class="flex flex-col md:flex-row gap-3 md:gap-4 mb-3 md:mb-4 z-10 relative">
+            <input type="text" id="transInput" value="${state.transInput}" onchange="state.transInput = this.value" placeholder="es., Quanto costa un biglietto?" class="flex-grow border-2 border-gray-200 rounded-xl md:rounded-2xl p-4 md:p-5 text-base md:text-xl font-bold text-gray-800 focus:border-pink-500 focus:ring-4 focus:ring-pink-100 outline-none transition-all shadow-sm min-h-[50px] md:min-h-[60px]" />
+            <button onclick="window.runTranslation()" class="bg-pink-500 hover:bg-pink-600 text-white px-6 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl font-black text-base md:text-xl transition-transform hover:scale-105 shadow-xl shadow-pink-500/30 flex justify-center items-center gap-2 md:gap-3 min-h-[50px] md:min-h-[60px] outline-none">
+              ${state.transLoading ? `<i data-lucide="loader-2" class="animate-spin w-5 h-5 md:w-6 md:h-6"></i>` : `<i data-lucide="languages" class="w-5 h-5 md:w-6 md:h-6"></i> Traduci`}
             </button>
           </div>
           
           ${state.transResult ? `
-            <div class="mt-8 bg-gray-900 p-6 md:p-8 rounded-[1.5rem] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-2xl animate-pop border border-gray-800">
+            <div class="mt-6 md:mt-8 bg-gray-900 p-5 md:p-8 rounded-2xl md:rounded-[1.5rem] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 shadow-2xl animate-pop border border-gray-800">
               <div class="w-full">
-                 <span class="text-3xl md:text-4xl font-black text-white block mb-2 hangul-display" style="font-family: 'Noto Sans KR'">${window.renderHangul(state.transResult)}</span>
-                 <span class="text-xl font-bold text-blue-300 tracking-wide break-words">${state.transRomaji}</span>
+                 <span class="text-2xl md:text-4xl font-black text-white block mb-2 hangul-display" style="font-family: 'Noto Sans KR'">${window.renderHangul(state.transResult)}</span>
+                 <span class="text-sm md:text-xl font-bold text-blue-300 tracking-wide break-words">${state.transRomaji}</span>
               </div>
-              <button onclick="window.playAudio(event, '${state.transResult}')" class="bg-blue-500 hover:bg-blue-400 shadow-lg text-white p-5 rounded-full transition-transform hover:scale-110 shrink-0 w-full md:w-auto flex justify-center min-h-[64px] min-w-[64px] outline-none">
-                <i data-lucide="volume-2" class="w-8 h-8"></i>
+              <button onclick="window.playAudio(event, '${state.transResult}')" class="bg-blue-500 hover:bg-blue-400 shadow-lg text-white p-4 md:p-5 rounded-full transition-transform hover:scale-110 shrink-0 w-full md:w-auto flex justify-center min-h-[50px] md:min-h-[64px] min-w-[50px] md:min-w-[64px] outline-none">
+                <i data-lucide="volume-2" class="w-6 h-6 md:w-8 md:h-8"></i>
               </button>
             </div>
           ` : ''}
         </div>
 
-        <div class="bg-white rounded-[2.5rem] p-8 md:p-10 mb-12 shadow-sm border-2 border-red-50 relative overflow-hidden flex flex-col md:flex-row items-center gap-8 group hover:shadow-lg transition-shadow">
-           <div class="p-6 bg-red-50 text-red-500 rounded-full shrink-0 group-hover:scale-110 transition-transform">
-               <i data-lucide="youtube" class="w-16 h-16"></i>
+        <div class="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 mb-8 md:mb-12 shadow-sm border-2 border-red-50 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 md:gap-8 group hover:shadow-lg transition-shadow">
+           <div class="p-4 md:p-6 bg-red-50 text-red-500 rounded-full shrink-0 group-hover:scale-110 transition-transform">
+               <i data-lucide="youtube" class="w-10 h-10 md:w-16 md:h-16"></i>
            </div>
            <div class="flex-grow text-center md:text-left">
-              <h2 class="text-2xl font-black text-gray-900 mb-2">Risorse Extra: Impara di Più!</h2>
-              <p class="text-gray-600 font-bold mb-4 text-lg">Sei in treno verso Jeju-do e vuoi studiare? Guarda questo fantastico corso base per ampliare il tuo vocabolario e la grammatica.</p>
-              <a href="https://www.youtube.com/watch?v=sx0yyQqkpqo&list=PLbFrQnW0BNMUkAFj4MjYauXBPtO3I9O_k" target="_blank" class="inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-black px-6 py-4 rounded-xl shadow-md min-h-[44px] transition-colors w-full md:w-auto outline-none" onclick="window.haptic()">
-                 Apri Playlist Youtube <i data-lucide="external-link" class="w-5 h-5"></i>
+              <h2 class="text-xl md:text-2xl font-black text-gray-900 mb-2">Risorse Extra: Impara di Più!</h2>
+              <p class="text-gray-600 font-bold mb-4 text-sm md:text-lg">Sei in treno verso Jeju-do e vuoi studiare? Guarda questo fantastico corso base per ampliare il tuo vocabolario e la grammatica.</p>
+              <a href="https://www.youtube.com/watch?v=sx0yyQqkpqo&list=PLbFrQnW0BNMUkAFj4MjYauXBPtO3I9O_k" target="_blank" class="inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-black px-4 md:px-6 py-3 md:py-4 rounded-xl shadow-md min-h-[44px] transition-colors w-full md:w-auto text-sm md:text-base outline-none" onclick="window.haptic()">
+                 Apri Playlist Youtube <i data-lucide="external-link" class="w-4 h-4 md:w-5 md:h-5"></i>
               </a>
            </div>
         </div>
 
-        <div class="bg-gradient-to-r from-blue-400 to-pink-400 text-white rounded-[2.5rem] p-10 md:p-12 mb-12 shadow-xl text-center md:text-left relative overflow-hidden">
-          <i data-lucide="book-marked" class="absolute right-0 bottom-0 w-64 h-64 opacity-10 transform translate-x-10 translate-y-10"></i>
-          <h1 class="text-4xl md:text-5xl font-black mb-4 flex items-center justify-center md:justify-start gap-4 relative z-10">
+        <div class="bg-gradient-to-r from-blue-400 to-pink-400 text-white rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-12 mb-8 md:mb-12 shadow-xl text-center md:text-left relative overflow-hidden">
+          <i data-lucide="book-marked" class="absolute right-0 bottom-0 w-48 h-48 md:w-64 md:h-64 opacity-10 transform translate-x-6 translate-y-6 md:translate-x-10 md:translate-y-10"></i>
+          <h1 class="text-3xl md:text-5xl font-black mb-3 md:mb-4 flex items-center justify-center md:justify-start gap-3 md:gap-4 relative z-10">
              Dizionario Interattivo 🎒
           </h1>
-          <p class="text-blue-50 text-xl font-bold relative z-10">Tocca le frasi in Coreano (Hangul) per allenare la pronuncia prima di uscire in città.</p>
+          <p class="text-blue-50 text-sm md:text-xl font-bold relative z-10">Tocca le frasi in Coreano (Hangul) per allenare la pronuncia prima di uscire in città.</p>
         </div>
-        <div class="space-y-6">
+        <div class="space-y-4 md:space-y-6">
       `;
 
       LIBRARY_DATA.forEach(section => {
         let itemsHtml = section.items.map(item => `
-          <div class="bg-white p-6 md:p-8 rounded-[1.5rem] shadow-sm border-2 border-gray-50 flex flex-col justify-between hover:shadow-xl hover:border-pink-100 transition-all group">
+          <div class="bg-white p-5 md:p-8 rounded-[1.2rem] md:rounded-[1.5rem] shadow-sm border-2 border-gray-50 flex flex-col justify-between hover:shadow-xl hover:border-pink-100 transition-all group">
             <div class="mb-2">
-              <div class="flex justify-between items-start mb-4 gap-4">
+              <div class="flex justify-between items-start mb-3 md:mb-4 gap-3 md:gap-4">
                 <div class="w-full">
-                  <p class="text-2xl md:text-3xl font-black text-gray-900 mb-2 group-hover:text-pink-600 transition-colors hangul-display" style="font-family: 'Noto Sans KR'">${window.renderHangul(item.hangul)}</p>
-                  <p class="text-xs font-black text-blue-500 uppercase tracking-widest break-words">${item.romaji}</p>
+                  <p class="text-xl md:text-3xl font-black text-gray-900 mb-1 md:mb-2 group-hover:text-pink-600 transition-colors hangul-display" style="font-family: 'Noto Sans KR'">${window.renderHangul(item.hangul)}</p>
+                  <p class="text-[10px] md:text-xs font-black text-blue-500 uppercase tracking-widest break-words">${item.romaji}</p>
                 </div>
-                <button onclick="window.playAudio(event, '${item.hangul}')" class="shrink-0 flex items-center justify-center bg-gray-50 hover:bg-pink-50 border border-gray-200 hover:border-pink-200 text-gray-700 hover:text-pink-700 p-3 rounded-full transition-all shadow-sm w-14 h-14 outline-none">
-                  <i data-lucide="volume-2" class="w-6 h-6"></i>
+                <button onclick="window.playAudio(event, '${item.hangul}')" class="shrink-0 flex items-center justify-center bg-gray-50 hover:bg-pink-50 border border-gray-200 hover:border-pink-200 text-gray-700 hover:text-pink-700 p-2 md:p-3 rounded-full transition-all shadow-sm w-10 h-10 md:w-14 md:h-14 outline-none">
+                  <i data-lucide="volume-2" class="w-5 h-5 md:w-6 md:h-6"></i>
                 </button>
               </div>
-              <p class="text-gray-700 font-black text-lg mb-4 leading-tight">"${item.eng}"</p>
-              <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <p class="text-gray-600 text-sm font-bold leading-relaxed flex items-start gap-2"><i data-lucide="info" class="w-4 h-4 text-pink-400 shrink-0 mt-0.5"></i> ${item.context}</p>
+              <p class="text-gray-700 font-black text-base md:text-lg mb-3 md:mb-4 leading-tight">"${item.eng}"</p>
+              <div class="bg-gray-50 p-3 md:p-4 rounded-xl border border-gray-100">
+                <p class="text-gray-600 text-xs md:text-sm font-bold leading-relaxed flex items-start gap-2"><i data-lucide="info" class="w-4 h-4 text-pink-400 shrink-0 mt-0.5"></i> ${item.context}</p>
               </div>
             </div>
           </div>
         `).join('');
 
         html += `
-          <details class="group bg-white rounded-[2rem] border-2 border-gray-100 shadow-sm overflow-hidden mb-6 open:shadow-lg open:border-pink-200 transition-all">
-            <summary class="flex items-center justify-between p-6 md:p-8 cursor-pointer bg-white hover:bg-gray-50 transition-colors no-select outline-none" onclick="window.haptic(20)">
-              <div class="flex items-center gap-4">
-                <div class="p-3 bg-gray-100 rounded-xl group-open:bg-pink-100 transition-colors"><i data-lucide="${section.icon}" class="${section.iconColor} w-8 h-8 group-open:text-pink-600"></i></div>
-                <h2 class="text-xl md:text-3xl font-black text-gray-800">${section.category}</h2>
+          <details class="group bg-white rounded-2xl md:rounded-[2rem] border-2 border-gray-100 shadow-sm overflow-hidden mb-4 md:mb-6 open:shadow-lg open:border-pink-200 transition-all">
+            <summary class="flex items-center justify-between p-5 md:p-8 cursor-pointer bg-white hover:bg-gray-50 transition-colors no-select outline-none" onclick="window.haptic(20)">
+              <div class="flex items-center gap-3 md:gap-4">
+                <div class="p-2 md:p-3 bg-gray-100 rounded-xl group-open:bg-pink-100 transition-colors"><i data-lucide="${section.icon}" class="${section.iconColor} w-6 h-6 md:w-8 md:h-8 group-open:text-pink-600"></i></div>
+                <h2 class="text-lg md:text-3xl font-black text-gray-800">${section.category}</h2>
               </div>
-              <div class="bg-gray-100 p-2 rounded-full text-gray-500 group-open:bg-pink-100 group-open:text-pink-500 transition-all group-open:rotate-180 shrink-0">
-                 <i data-lucide="chevron-down" class="w-6 h-6"></i>
+              <div class="bg-gray-100 p-1.5 md:p-2 rounded-full text-gray-500 group-open:bg-pink-100 group-open:text-pink-500 transition-all group-open:rotate-180 shrink-0">
+                 <i data-lucide="chevron-down" class="w-5 h-5 md:w-6 md:h-6"></i>
               </div>
             </summary>
-            <div class="p-6 md:p-8 pt-0 grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50">
+            <div class="p-5 md:p-8 pt-0 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 bg-gray-50/50">
               ${itemsHtml}
             </div>
           </details>
@@ -1792,7 +1803,6 @@
     };
 
     const renderProfile = () => {
-      // Calculate category progress for Radar Chart style display
       let saluti = 0, vita = 0, passioni = 0, avan = 0;
       state.completedDays.forEach(d => {
          if(d <= 5) saluti += 20; 
@@ -1802,72 +1812,72 @@
       });
 
       return `
-      <div class="max-w-md mx-auto px-4 animate-pop">
-        <div class="bg-white rounded-[3rem] korean-shadow p-8 md:p-10 border border-blue-50 text-center relative overflow-hidden mt-4">
+      <div class="max-w-md mx-auto px-2 md:px-4 animate-pop">
+        <div class="bg-white rounded-[2rem] md:rounded-[3rem] korean-shadow p-6 md:p-10 border border-blue-50 text-center relative overflow-hidden mt-4">
           
-          <div class="w-32 h-32 bg-pink-50 text-pink-600 rounded-full flex items-center justify-center mx-auto mb-8 border-8 border-white shadow-xl relative z-10">
-            <i data-lucide="user" class="w-16 h-16"></i>
+          <div class="w-24 h-24 md:w-32 md:h-32 bg-pink-50 text-pink-600 rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 border-4 md:border-8 border-white shadow-xl relative z-10">
+            <i data-lucide="user" class="w-12 h-12 md:w-16 md:h-16"></i>
           </div>
-          <h2 class="text-4xl font-black text-gray-900 mb-2">Profilo di Studio</h2>
-          <p class="text-gray-500 mb-12 font-bold text-lg">Il tuo viaggio in Corea è al sicuro qui.</p>
+          <h2 class="text-2xl md:text-4xl font-black text-gray-900 mb-2">Profilo di Studio</h2>
+          <p class="text-gray-500 mb-8 md:mb-12 font-bold text-sm md:text-lg">Il tuo viaggio in Corea è al sicuro qui.</p>
           
-          <div class="text-left mb-8">
-            <label class="block text-sm font-black text-gray-500 mb-3 uppercase tracking-widest">Cambia Nome Studente</label>
+          <div class="text-left mb-6 md:mb-8">
+            <label class="block text-[10px] md:text-sm font-black text-gray-500 mb-2 md:mb-3 uppercase tracking-widest">Cambia Nome Studente</label>
             <input 
               type="text" 
               value="${state.profileName}"
               onchange="window.updateProfileName(this.value)"
-              class="w-full border-2 border-gray-200 rounded-2xl p-5 text-2xl font-black text-gray-800 focus:border-pink-500 outline-none transition-colors shadow-inner bg-gray-50 focus:bg-white min-h-[60px]"
+              class="w-full border-2 border-gray-200 rounded-xl md:rounded-2xl p-4 md:p-5 text-xl md:text-2xl font-black text-gray-800 focus:border-pink-500 outline-none transition-colors shadow-inner bg-gray-50 focus:bg-white min-h-[50px] md:min-h-[60px]"
             />
           </div>
 
-          <div class="text-left mb-8 bg-gray-50 p-6 rounded-3xl border border-gray-100">
-             <label class="block text-sm font-black text-gray-800 mb-4 uppercase tracking-widest flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-5 h-5 text-blue-500"></i> Competenze Apprese</label>
-             <div class="space-y-4">
+          <div class="text-left mb-6 md:mb-8 bg-gray-50 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100">
+             <label class="block text-[10px] md:text-sm font-black text-gray-800 mb-3 md:mb-4 uppercase tracking-widest flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-4 h-4 md:w-5 md:h-5 text-blue-500"></i> Competenze Apprese</label>
+             <div class="space-y-3 md:space-y-4">
                  <div>
-                    <div class="flex justify-between text-xs font-bold text-gray-500 mb-1"><span>Basi & Saluti</span> <span>${Math.min(saluti, 100)}%</span></div>
-                    <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-pink-500 h-2 rounded-full" style="width: ${Math.min(saluti, 100)}%"></div></div>
+                    <div class="flex justify-between text-[10px] md:text-xs font-bold text-gray-500 mb-1"><span>Basi & Saluti</span> <span>${Math.min(saluti, 100)}%</span></div>
+                    <div class="w-full bg-gray-200 rounded-full h-1.5 md:h-2"><div class="bg-pink-500 h-1.5 md:h-2 rounded-full" style="width: ${Math.min(saluti, 100)}%"></div></div>
                  </div>
                  <div>
-                    <div class="flex justify-between text-xs font-bold text-gray-500 mb-1"><span>Vita Quotidiana</span> <span>${Math.min(vita, 100)}%</span></div>
-                    <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style="width: ${Math.min(vita, 100)}%"></div></div>
+                    <div class="flex justify-between text-[10px] md:text-xs font-bold text-gray-500 mb-1"><span>Vita Quotidiana</span> <span>${Math.min(vita, 100)}%</span></div>
+                    <div class="w-full bg-gray-200 rounded-full h-1.5 md:h-2"><div class="bg-blue-500 h-1.5 md:h-2 rounded-full" style="width: ${Math.min(vita, 100)}%"></div></div>
                  </div>
                  <div>
-                    <div class="flex justify-between text-xs font-bold text-gray-500 mb-1"><span>Passioni & Hobby</span> <span>${Math.min(passioni, 100)}%</span></div>
-                    <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" style="width: ${Math.min(passioni, 100)}%"></div></div>
+                    <div class="flex justify-between text-[10px] md:text-xs font-bold text-gray-500 mb-1"><span>Passioni & Hobby</span> <span>${Math.min(passioni, 100)}%</span></div>
+                    <div class="w-full bg-gray-200 rounded-full h-1.5 md:h-2"><div class="bg-green-500 h-1.5 md:h-2 rounded-full" style="width: ${Math.min(passioni, 100)}%"></div></div>
                  </div>
              </div>
           </div>
 
-          <div class="text-left mb-10 p-6 rounded-3xl border border-gray-200">
-             <label class="block text-sm font-black text-gray-800 mb-2 uppercase tracking-widest flex items-center gap-2"><i data-lucide="zoom-in" class="w-5 h-5"></i> Grandezza Testo Coreano</label>
-             <p class="text-xs text-gray-500 font-bold mb-4 leading-relaxed">Se i caratteri ti sembrano troppo piccoli sul telefono, usa questo slider per ingrandirli in tutta l'app.</p>
-             <div class="flex gap-4 items-center">
-                 <span class="text-sm font-black text-gray-400">가</span>
+          <div class="text-left mb-8 md:mb-10 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-gray-200">
+             <label class="block text-[10px] md:text-sm font-black text-gray-800 mb-1.5 md:mb-2 uppercase tracking-widest flex items-center gap-2"><i data-lucide="zoom-in" class="w-4 h-4 md:w-5 md:h-5"></i> Grandezza Testo Coreano</label>
+             <p class="text-[10px] md:text-xs text-gray-500 font-bold mb-3 md:mb-4 leading-relaxed">Se i caratteri ti sembrano troppo piccoli sul telefono, usa questo slider per ingrandirli in tutta l'app.</p>
+             <div class="flex gap-3 md:gap-4 items-center">
+                 <span class="text-xs md:text-sm font-black text-gray-400">가</span>
                  <input type="range" min="1" max="1.6" step="0.1" value="${state.hangulScale || 1}" onchange="window.updateHangulSize(this.value)" class="flex-grow" />
-                 <span class="text-2xl font-black text-pink-500">가</span>
+                 <span class="text-xl md:text-2xl font-black text-pink-500">가</span>
              </div>
           </div>
 
-          <div class="text-left mb-10 bg-pink-50 p-6 rounded-3xl border border-pink-100">
-             <label class="block text-sm font-black text-pink-600 mb-2 uppercase tracking-widest flex items-center gap-2"><i data-lucide="unlock" class="w-4 h-4"></i> Inserisci Codice Sblocco</label>
-             <p class="text-xs text-pink-500 font-bold mb-3 leading-relaxed">Usa il codice segreto fornito dall'amministratore per sincronizzare il livello se svuoti la cache!</p>
+          <div class="text-left mb-8 md:mb-10 bg-pink-50 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-pink-100">
+             <label class="block text-[10px] md:text-sm font-black text-pink-600 mb-1.5 md:mb-2 uppercase tracking-widest flex items-center gap-2"><i data-lucide="unlock" class="w-3 h-3 md:w-4 md:h-4"></i> Inserisci Codice Sblocco</label>
+             <p class="text-[10px] md:text-xs text-pink-500 font-bold mb-2 md:mb-3 leading-relaxed">Usa il codice segreto fornito dall'amministratore per sincronizzare il livello!</p>
              <div class="flex gap-2">
-                 <input type="text" id="unlockCodeInput" placeholder="es. SR20K" class="w-full border-2 border-pink-200 rounded-xl p-3 text-lg font-bold text-gray-800 focus:border-pink-500 outline-none uppercase font-mono shadow-inner min-h-[50px]" />
-                 <button onclick="window.unlockDayWithCode(document.getElementById('unlockCodeInput').value)" class="bg-pink-500 hover:bg-pink-600 text-white px-5 rounded-xl font-bold shadow-md min-h-[50px] outline-none"><i data-lucide="arrow-right" class="w-6 h-6"></i></button>
+                 <input type="text" id="unlockCodeInput" placeholder="es. SR20K" class="w-full border-2 border-pink-200 rounded-xl md:rounded-xl p-2 md:p-3 text-base md:text-lg font-bold text-gray-800 focus:border-pink-500 outline-none uppercase font-mono shadow-inner min-h-[44px] md:min-h-[50px]" />
+                 <button onclick="window.unlockDayWithCode(document.getElementById('unlockCodeInput').value)" class="bg-pink-500 hover:bg-pink-600 text-white px-4 md:px-5 rounded-xl font-bold shadow-md min-h-[44px] md:min-h-[50px] outline-none"><i data-lucide="arrow-right" class="w-5 h-5 md:w-6 md:h-6"></i></button>
              </div>
           </div>
 
-          <div class="bg-gray-900 p-8 rounded-3xl mb-12 flex justify-between items-center text-left shadow-xl">
+          <div class="bg-gray-900 p-6 md:p-8 rounded-2xl md:rounded-3xl mb-8 md:mb-12 flex justify-between items-center text-left shadow-xl">
             <div>
-              <p class="text-gray-400 text-xs font-black uppercase tracking-widest mb-1">Giorni Completati</p>
-              <p class="text-5xl font-black text-pink-400">${state.completedDays.length}</p>
+              <p class="text-gray-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-1">Giorni Completati</p>
+              <p class="text-4xl md:text-5xl font-black text-pink-400">${state.completedDays.length}</p>
             </div>
-            <i data-lucide="award" class="text-yellow-400 w-16 h-16"></i>
+            <i data-lucide="award" class="text-yellow-400 w-12 h-12 md:w-16 md:h-16"></i>
           </div>
 
-          <button onclick="window.handleSwitchAccount()" class="w-full bg-white border-2 border-gray-200 hover:bg-red-50 hover:border-red-300 hover:text-red-600 text-gray-500 py-5 rounded-2xl font-black text-lg shadow-sm transition-all flex justify-center items-center gap-3 min-h-[60px] outline-none">
-            <i data-lucide="trash-2" class="w-6 h-6"></i> Resetta Percorso
+          <button onclick="window.handleSwitchAccount()" class="w-full bg-white border-2 border-gray-200 hover:bg-red-50 hover:border-red-300 hover:text-red-600 text-gray-500 py-4 md:py-5 rounded-xl md:rounded-2xl font-black text-base md:text-lg shadow-sm transition-all flex justify-center items-center gap-2 md:gap-3 min-h-[50px] md:min-h-[60px] outline-none">
+            <i data-lucide="trash-2" class="w-5 h-5 md:w-6 md:h-6"></i> Resetta Percorso
           </button>
         </div>
       </div>
@@ -1876,8 +1886,9 @@
 
     // Boot App
     initApp();
-  </script> 
-  
+
+  </script>
+
   <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -1887,6 +1898,5 @@
     });
   }
   </script>
-  
 </body>
 </html>
