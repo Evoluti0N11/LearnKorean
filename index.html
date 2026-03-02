@@ -7,6 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Annyeong Sara! Parla Coreano in 45 Giorni</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f472b6">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1870,7 +1872,18 @@
 
     // Boot App
     initApp();
-
+  </script>  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then((reg) => console.log('Service Worker registrato con successo!', reg.scope))
+        .catch((err) => console.warn('Errore registrazione Service Worker', err));
+    });
+  }
   </script>
+  
+</body>
+</html>
+  
 </body>
 </html>
