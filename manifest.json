@@ -1,7 +1,7 @@
 {
   "id": "annyeong-sara-korean-app-v1",
   "name": "Annyeong Sara! Parla Coreano in 45 Giorni",
-  "short_name": "Annyeong Sara",
+  "short_name": "K-Sara",
   "description": "Il tuo percorso interattivo per padroneggiare il Coreano con focus su Gaming, Gym, Cosplay e K-Drama.",
   "start_url": "./index.html",
   "scope": "./",
