@@ -1,85 +1,53 @@
-const CACHE_NAME = 'korean-app-v1';
-const urlsToCache = [
+const CACHE_NAME = 'sara-korean-v2';
+
+// I file base da scaricare subito per far partire l'app offline
+const APP_SHELL = [
   './',
-  './Korean.html',
-  './manifest.json',
-  'https://cdn.tailwindcss.com',
-  'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap',
-  'https://unpkg.com/lucide@latest',
-  'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js'
+  './index.html',
+  './manifest.json'
 ];
 
-// Install event - cache essential assets
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      // Cache main HTML and manifest
-      return cache.addAll([
-        './Korean.html',
-        './manifest.json'
-      ]).catch(err => {
-        console.log('Cache install error (non-critical):', err);
-      });
+// Installa il Service Worker e salva l'App Shell
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[Service Worker] Salvataggio file base (App Shell)');
+      return cache.addAll(APP_SHELL);
     })
   );
   self.skipWaiting();
 });
 
-// Activate event - clean old caches
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
+// Pulisce le vecchie cache se aggiorni l'app
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keyList) => {
+      return Promise.all(keyList.map((key) => {
+        if (key !== CACHE_NAME) {
+          console.log('[Service Worker] Rimozione vecchia cache', key);
+          return caches.delete(key);
+        }
+      }));
     })
   );
   self.clients.claim();
 });
 
-// Fetch event - network first with cache fallback
-self.addEventListener('fetch', event => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') {
-    return;
-  }
-
-  event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // Only cache successful responses
-        if (!response || response.status !== 200 || response.type !== 'basic') {
+// Intercetta le richieste di rete (La magia dell'Offline)
+// Strategia: Cache First, poi Network (e salva nella cache per le prossime volte)
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((r) => {
+      // Se il file è in cache, restituiscilo immediatamente (funziona offline!)
+      return r || fetch(e.request).then((response) => {
+        return caches.open(CACHE_NAME).then((cache) => {
+          // Salva in cache anche Tailwind, i Font e le librerie esterne mentre navighi
+          if (e.request.method === 'GET' && e.request.url.startsWith('http')) {
+            cache.put(e.request, response.clone());
+          }
           return response;
-        }
-
-        // Clone the response
-        const responseToCache = response.clone();
-
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseToCache);
         });
-
-        return response;
-      })
-      .catch(err => {
-        // Return from cache if network fails
-        return caches.match(event.request)
-          .then(response => {
-            return response || new Response('Offline - please check your connection', {
-              status: 503,
-              statusText: 'Service Unavailable',
-              headers: new Headers({
-                'Content-Type': 'text/plain'
-              })
-            });
-          });
-      })
+      });
+    })
   );
 });
