@@ -1,0 +1,15 @@
+{
+  "name": "Français au Quotidien — 30 jours",
+  "short_name": "Français 30j",
+  "description": "Programme de 30 jours pour pratiquer la prononciation et la conversation en français : vie quotidienne et romantisme littéraire.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#15121f",
+  "theme_color": "#15121f",
+  "lang": "fr",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

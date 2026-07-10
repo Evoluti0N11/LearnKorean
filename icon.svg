@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <radialGradient id="bg" cx="35%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#2a2440"/>
+      <stop offset="100%" stop-color="#15121f"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c987"/>
+      <stop offset="100%" stop-color="#d3a24d"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  <circle cx="64" cy="64" r="46" fill="none" stroke="url(#gold)" stroke-width="4"/>
+  <circle cx="64" cy="64" r="37" fill="none" stroke="url(#gold)" stroke-width="1.5" opacity="0.6"/>
+  <text x="64" y="80" font-family="Georgia, 'Times New Roman', serif" font-size="54" font-weight="600"
+        text-anchor="middle" fill="url(#gold)">R</text>
+</svg>

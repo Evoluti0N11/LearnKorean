@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Français au Quotidien — 30 jours de conversation</title>
+<meta name="description" content="Programme de 30 jours pour pratiquer la prononciation et la conversation en français, entre vie quotidienne et romantisme littéraire.">
+
+<meta name="theme-color" content="#15121f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Français 30j">
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">Français <em>au Quotidien</em></span>
+    </div>
+    <div id="topbar-stats" class="topbar-stats"></div>
+  </header>
+
+  <main id="view-root"></main>
+
+  <nav class="bottomnav" id="bottomnav">
+    <button class="navbtn" data-view="home"><span class="navico">🏠</span>Aujourd'hui</button>
+    <button class="navbtn" data-view="calendar"><span class="navico">📅</span>Parcours</button>
+    <button class="navbtn" data-view="concepts"><span class="navico">🔖</span>Concepts</button>
+    <button class="navbtn" data-view="badges"><span class="navico">🏅</span>Badges</button>
+    <button class="navbtn" data-view="settings"><span class="navico">⚙️</span>Réglages</button>
+  </nav>
+</div>
+
+<div id="toast-layer"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
