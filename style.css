@@ -418,6 +418,10 @@ p { line-height: 1.55; color: var(--parchment); margin: 0 0 12px; }
   margin-bottom: 14px;
   background: linear-gradient(160deg, #241f38, #1b1729);
   border: 1px solid rgba(211,162,77,0.35);
+  overflow: hidden;
+}
+.exlibris-photo {
+  display: block; width: calc(100% + 32px); margin: -18px -16px 12px; height: 130px; object-fit: cover;
 }
 .exlibris::before, .exlibris::after {
   content: ""; position:absolute; left:10px; right:10px; height:1px;
@@ -440,6 +444,12 @@ p { line-height: 1.55; color: var(--parchment); margin: 0 0 12px; }
   padding: 16px; margin-bottom: 10px; color: var(--mist);
 }
 .concept-locked .lock { font-size: 20px; }
+
+.loc-jump-link {
+  display: block; width: 100%; text-align: left; margin-top: 10px; padding: 9px 12px;
+  background: rgba(211,162,77,0.1); border: 1px solid rgba(211,162,77,0.3); border-radius: 10px;
+  color: var(--gold-soft); font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
 
 /* ---------------- Badges ---------------- */
 .badge-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
@@ -508,3 +518,101 @@ hr.rule { border: none; border-top: 1px solid var(--line); margin: 18px 0; }
   font-size: 12px; color: var(--mist); background: rgba(244,239,228,0.04);
   border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 14px;
 }
+
+/* ---------------- Segmented toggle (Carte / Grille) ---------------- */
+.seg-toggle {
+  display: flex; gap: 6px; background: rgba(244,239,228,0.05);
+  border: 1px solid var(--line); border-radius: 999px; padding: 4px; margin: 12px 0 14px;
+}
+.seg-btn {
+  flex: 1; border: none; background: none; color: var(--mist);
+  font-family: inherit; font-size: 13px; font-weight: 600; padding: 9px 10px;
+  border-radius: 999px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.seg-btn.active { background: linear-gradient(135deg, var(--gold-soft), var(--gold)); color: #1a1408; }
+
+/* ---------------- Carte littéraire de Paris ---------------- */
+.map-shell {
+  position: relative; width: 100%; height: 56vh; min-height: 360px;
+  border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--line); background: #0d0b14;
+}
+#paris-map { position: absolute; inset: 0; background: #0d0b14; }
+#fog-canvas { position: absolute; inset: 0; z-index: 350; pointer-events: none; }
+
+.lit-marker {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--gold-soft), var(--gold) 75%);
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  box-shadow: 0 0 0 3px rgba(21,18,31,0.65), 0 4px 10px rgba(0,0,0,0.5);
+  border: 2px solid rgba(244,239,228,0.55);
+}
+.lit-marker.just-unlocked { animation: markerPulse 1.5s ease-in-out 3; }
+@keyframes markerPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(21,18,31,0.65), 0 0 0 0 rgba(211,162,77,0.55); }
+  50% { box-shadow: 0 0 0 3px rgba(21,18,31,0.65), 0 0 0 16px rgba(211,162,77,0); }
+}
+@media (prefers-reduced-motion: reduce) { .lit-marker.just-unlocked { animation: none; } }
+
+.map-toast {
+  position: absolute; left: 50%; bottom: 14px; transform: translate(-50%, 8px);
+  background: rgba(21,18,31,0.95); border: 1px solid rgba(211,162,77,0.4); color: var(--parchment);
+  font-size: 12.5px; padding: 9px 16px; border-radius: 999px; opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease; max-width: 88%; text-align: center;
+  z-index: 500; pointer-events: none;
+}
+.map-toast.show { opacity: 1; transform: translate(-50%, 0); }
+.map-toast.hidden { display: none; }
+
+/* Leaflet theme overrides */
+.leaflet-popup-content-wrapper {
+  background: var(--ink-2); color: var(--parchment); border-radius: 14px;
+  border: 1px solid rgba(211,162,77,0.35); box-shadow: 0 14px 34px rgba(0,0,0,0.55);
+}
+.leaflet-popup-tip { background: var(--ink-2); border: 1px solid rgba(211,162,77,0.35); }
+.leaflet-popup-content { margin: 0 !important; width: 240px !important; }
+.leaflet-popup-close-button { color: var(--gold-soft) !important; font-size: 18px !important; padding: 6px 8px !important; }
+.loc-popup { display: flex; flex-direction: column; }
+.loc-photo { width: 100%; height: 120px; object-fit: cover; display: block; }
+.loc-photo.placeholder {
+  display: flex; align-items: center; justify-content: center; height: 90px;
+  background: linear-gradient(160deg, #241f38, #1b1729); font-size: 26px;
+}
+.loc-popup-body { padding: 12px 14px 14px; }
+.loc-arr { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--gold-dim); }
+.loc-popup-body h4 { margin: 4px 0 6px; font-size: 15px; color: var(--gold-soft); }
+.loc-note { font-size: 12.5px; color: var(--parchment-dim); margin: 0 0 8px; line-height: 1.45; }
+.loc-extract { font-size: 12px; color: var(--parchment); margin: 0 0 8px; line-height: 1.4; }
+.loc-link { font-size: 12px; font-weight: 600; }
+
+.leaflet-control-zoom a { background: var(--ink-2) !important; color: var(--parchment) !important; border-color: var(--line) !important; }
+.leaflet-control-zoom a:hover { background: var(--ink-3) !important; }
+.leaflet-bar { border: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important; }
+.leaflet-control-attribution { background: rgba(21,18,31,0.75) !important; color: var(--mist) !important; font-size: 10px !important; }
+.leaflet-control-attribution a { color: var(--gold-soft) !important; }
+
+/* ---------------- Transitions d'étape (lesson player) ---------------- */
+.step-body { animation: stepIn 0.28s ease both; }
+@keyframes stepIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) { .step-body { animation: none; } }
+
+/* ---------------- Progression active (gating) ---------------- */
+.step-hint { text-align: center; margin: 10px 0 2px; }
+.skip-link {
+  display: block; width: 100%; text-align: center; background: none; border: none;
+  color: var(--mist); font-size: 12px; text-decoration: underline; padding: 8px; margin-top: 2px;
+  cursor: pointer; font-family: inherit;
+}
+
+/* ---------------- Diagnostic de prononciation mot-à-mot ---------------- */
+.wd-line { display: block; margin: 8px 0; font-family: var(--font-display); font-size: 15px; line-height: 1.5; }
+.wd-ok { color: var(--success); }
+.wd-miss { color: var(--ember-soft); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
+
+/* ---------------- Bulle de réaction conversationnelle ---------------- */
+.reaction-bubble {
+  margin-top: 8px; background: rgba(211,162,77,0.12); border: 1px solid rgba(211,162,77,0.3);
+  border-radius: 12px; padding: 8px 10px; font-style: normal; font-size: 12.5px; color: var(--gold-soft);
+}
+
+/* nav actif : pastille plus visible sur mobile */
+.navbtn.active { background: rgba(211,162,77,0.12); border-radius: 12px; }

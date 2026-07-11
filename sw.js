@@ -1,15 +1,19 @@
 /* Service worker minimal : met en cache la coquille de l'application
    pour un fonctionnement hors-ligne basique une fois la page déjà visitée. */
 
-const CACHE_NAME = "fq-cache-v1";
+const CACHE_NAME = "fq-cache-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
   "./data.js",
+  "./locations.js",
+  "./map.js",
   "./manifest.json",
-  "./icon.svg"
+  "./icon.svg",
+  "./vendor/leaflet/leaflet.js",
+  "./vendor/leaflet/leaflet.css"
 ];
 
 self.addEventListener("install", (event) => {

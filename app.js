@@ -43,8 +43,17 @@ const ui = {
   lessonDay: null,
   step: 0,
   celebrationQueue: [],
-  reviewWords: null // cache des mots de révision pour le jour de lesson en cours
+  reviewWords: null, // cache des mots de révision pour le jour de lesson en cours
+  calendarMode: "map", // "map" | "grid"
+  flyToLocationId: null,
+  stepProgress: null
 };
+
+const REACTIONS = [
+  "Merci pour ta réponse !", "Intéressant, je note ça.", "D'accord, je comprends mieux.",
+  "Merci d'avoir partagé ça !", "Très bien, continue comme ça.", "Je vois — belle réponse.",
+  "Noté, merci !", "Bien joué, on continue."
+];
 
 /* ---------------- Utilitaires date ---------------- */
 function getTodayISO(d) {
@@ -115,6 +124,30 @@ function similarity(a, b) {
   const dist = levenshtein(na, nb);
   const maxLen = Math.max(na.length, nb.length, 1);
   return 1 - dist / maxLen;
+}
+
+/* Alignement mot-à-mot (LCS) pour repérer quels mots ont été reconnus */
+function wordDiff(target, said) {
+  const a = normalize(target).split(" ").filter(Boolean);
+  const b = normalize(said).split(" ").filter(Boolean);
+  const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  let i = a.length, j = b.length;
+  const matched = new Set();
+  while (i > 0 && j > 0) {
+    if (a[i - 1] === b[j - 1]) { matched.add(i - 1); i--; j--; }
+    else if (dp[i - 1][j] >= dp[i][j - 1]) i--; else j--;
+  }
+  return a.map((w, idx) => ({ word: w, ok: matched.has(idx) }));
+}
+
+function wordDiffHTML(target, said) {
+  if (!said) return "";
+  return wordDiff(target, said).map(d => `<span class="${d.ok ? "wd-ok" : "wd-miss"}">${d.word}</span>`).join(" ");
 }
 
 /* ---------------- Synthèse vocale (écoute en français) ---------------- */
@@ -221,11 +254,13 @@ function markDayComplete(day) {
   }
 
   const newBadges = checkBadges();
+  const unlockedLoc = typeof locationForDay === "function" ? locationForDay(day) : null;
 
   ui.celebrationQueue = [];
   if (!already) {
     ui.celebrationQueue.push({ type: "day", day, xpGain });
     if (newConcept) ui.celebrationQueue.push({ type: "concept", concept: newConcept });
+    if (unlockedLoc) ui.celebrationQueue.push({ type: "location", loc: unlockedLoc });
   }
   newBadges.forEach(b => ui.celebrationQueue.push({ type: "badge", badge: b }));
 
@@ -270,6 +305,16 @@ function showNextCelebration() {
         <p style="font-family:var(--font-display); color:var(--gold-soft); font-size:18px;">${item.concept.title}</p>
         <button class="btn btn-primary btn-block" data-action="close-celebration">Voir</button>
       </div>`;
+  } else if (item.type === "location") {
+    html = `
+      <div class="celebrate">
+        <span class="big-emoji">🗺️</span>
+        <h3>Un lieu de Paris dévoilé !</h3>
+        <p style="font-family:var(--font-display); color:var(--gold-soft); font-size:18px; margin-bottom:2px;">${item.loc.name}</p>
+        <p class="muted small">${item.loc.arrondissement} arrondissement</p>
+        <button class="btn btn-primary btn-block" data-action="goto-map-location" data-locid="${item.loc.id}">🗺️ Voir sur la carte</button>
+        <button class="btn btn-secondary btn-block" style="margin-top:8px;" data-action="close-celebration">Plus tard</button>
+      </div>`;
   } else if (item.type === "badge") {
     html = `
       <div class="celebrate">
@@ -290,6 +335,8 @@ function render() {
   const root = document.getElementById("view-root");
   document.querySelectorAll(".navbtn").forEach(b => b.classList.toggle("active", b.dataset.view === ui.view));
 
+  if (typeof destroyParisMap === "function") destroyParisMap();
+
   if (ui.view === "home") root.innerHTML = renderHome();
   else if (ui.view === "calendar") root.innerHTML = renderCalendar();
   else if (ui.view === "concepts") root.innerHTML = renderConcepts();
@@ -299,6 +346,10 @@ function render() {
 
   renderTopStats();
   root.scrollTop = 0;
+
+  if (ui.view === "calendar" && ui.calendarMode === "map") {
+    setTimeout(() => { if (typeof initParisMap === "function") initParisMap(); }, 30);
+  }
 }
 
 function renderTopStats() {
@@ -379,6 +430,10 @@ function renderHome() {
       <div class="ico">🔖</div>
       <div class="txt"><strong>${STATE.unlockedConcepts.length} / ${TOTAL_CONCEPTS} fiches concept</strong><span>Débloquées en terminant les jours « Romantisme »</span></div>
     </div>
+    <div class="mini-card" data-action="nav" data-view="calendar" style="cursor:pointer;">
+      <div class="ico">🗺️</div>
+      <div class="txt"><strong>${getUnlockedLocationIds().size} / ${PARIS_LOCATIONS.length} lieux de Paris dévoilés</strong><span>Une carte littéraire à explorer au fil du parcours</span></div>
+    </div>
     <div class="mini-card">
       <div class="ico">🔥</div>
       <div class="txt"><strong>Série actuelle : ${STATE.streak} jour(s)</strong><span>Record : ${STATE.bestStreak} jour(s) d'affilée</span></div>
@@ -390,6 +445,33 @@ function renderHome() {
 }
 
 function renderCalendar() {
+  return `
+  <div class="screen">
+    <h1>Ton parcours</h1>
+    <p class="muted small">Un nouveau jour se débloque automatiquement chaque jour. Tu peux revenir sur n'importe quel jour déjà déverrouillé pour réviser.</p>
+    <div class="seg-toggle">
+      <button class="seg-btn ${ui.calendarMode === "map" ? "active" : ""}" data-action="cal-mode" data-mode="map">🗺️ Carte de Paris</button>
+      <button class="seg-btn ${ui.calendarMode === "grid" ? "active" : ""}" data-action="cal-mode" data-mode="grid">📅 Grille</button>
+    </div>
+    ${ui.calendarMode === "map" ? renderMapMode() : renderGridMode()}
+  </div>`;
+}
+
+function renderMapMode() {
+  const unlockedCount = getUnlockedLocationIds().size;
+  return `
+    <div class="map-shell">
+      <div id="paris-map"></div>
+      <canvas id="fog-canvas"></canvas>
+      <div id="map-toast" class="map-toast hidden"></div>
+    </div>
+    <p class="small muted" style="margin-top:10px;">
+      🔓 ${unlockedCount} / ${PARIS_LOCATIONS.length} lieux révélés. Termine un jour « Romantisme » pour en découvrir un nouveau, photo et petite histoire à l'appui.
+      Fond de carte © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.
+    </p>`;
+}
+
+function renderGridMode() {
   let cells = "";
   const avail = availableDay();
   for (let d = 1; d <= TOTAL_DAYS; d++) {
@@ -406,30 +488,38 @@ function renderCalendar() {
       </div>`;
   }
   return `
-  <div class="screen">
-    <h1>Ton parcours</h1>
-    <p class="muted small">Un nouveau jour se débloque automatiquement chaque jour. Tu peux revenir sur n'importe quel jour déjà déverrouillé pour réviser.</p>
     <div class="legend">
       <span><span class="sw" style="background:#a8d4b8"></span>Vie quotidienne</span>
       <span><span class="sw" style="background:var(--gold-soft)"></span>Romantisme</span>
       <span><span class="sw" style="background:var(--ember-soft)"></span>Grand final</span>
     </div>
-    <div class="day-grid">${cells}</div>
-  </div>`;
+    <div class="day-grid">${cells}</div>`;
 }
 
 function renderConcepts() {
   const litt = CURRICULUM.filter(d => d.concept);
   let html = litt.map(d => {
     const unlocked = STATE.unlockedConcepts.some(c => c.title === d.concept.title);
+    const loc = typeof locationForDay === "function" ? locationForDay(d.day) : null;
     if (unlocked) {
+      let thumbHTML = "";
+      if (loc && typeof wikiCache !== "undefined") {
+        const cached = wikiCache[loc.wikiTitle];
+        if (cached && cached.thumbnail) {
+          thumbHTML = `<img class="exlibris-photo" src="${cached.thumbnail.source}" alt="${loc.name}" loading="lazy">`;
+        } else if (!cached) {
+          fetchWikiSummary(loc.wikiTitle).then((res) => { if (res && res.thumbnail && ui.view === "concepts") render(); });
+        }
+      }
       return `
       <div class="exlibris">
+        ${thumbHTML}
         <div class="frame-corner fc-tl"></div><div class="frame-corner fc-tr"></div>
         <div class="frame-corner fc-bl"></div><div class="frame-corner fc-br"></div>
         <span class="tag">Ex-libris · Jour ${d.day}</span>
         <h3>${d.concept.title}</h3>
         <p>${d.concept.def}</p>
+        ${loc ? `<button class="loc-jump-link" data-action="goto-map-location" data-locid="${loc.id}">📍 Voir « ${loc.name} » sur la carte →</button>` : ""}
       </div>`;
     }
     return `
@@ -529,10 +619,61 @@ function shuffle(arr) {
   return a;
 }
 
+function freshProgress() {
+  return { warmup: false, vocab: new Set(), listening: false, conversation: new Set(), challenge: false, review: new Set() };
+}
+
+function stepIsComplete(stepName, d) {
+  if (!ui.stepProgress) return false;
+  const p = ui.stepProgress;
+  if (stepName === "review") return p.review.size >= Math.min(3, (ui.reviewWords ? ui.reviewWords.words.length : 3));
+  if (stepName === "warmup") return p.warmup === true;
+  if (stepName === "vocab") return p.vocab.size >= d.vocab.length;
+  if (stepName === "listening") return p.listening === true;
+  if (stepName === "conversation") return p.conversation.size >= d.conversation.length;
+  if (stepName === "challenge") return p.challenge === true;
+  if (stepName === "summary") return true;
+  return true;
+}
+
+function stepHint(stepName, d) {
+  const p = ui.stepProgress;
+  if (stepName === "review") return `Entraîne-toi sur au moins 3 mots (${p.review.size}/3) pour continuer.`;
+  if (stepName === "warmup") return "Utilise le micro pour répéter la phrase avant de continuer.";
+  if (stepName === "vocab") return `Répète chaque mot au micro pour continuer (${p.vocab.size}/${d.vocab.length}).`;
+  if (stepName === "listening") return "Réponds à la question pour continuer.";
+  if (stepName === "conversation") return `Réponds à voix haute à chaque question pour continuer (${p.conversation.size}/${d.conversation.length}).`;
+  if (stepName === "challenge") return "Enregistre ton défi oral pour terminer le jour.";
+  return "";
+}
+
+function buildLessonNavHTML(d, steps) {
+  const isLast = ui.step === steps.length - 1;
+  const isFirst = ui.step === 0;
+  const stepName = steps[ui.step];
+  const already = STATE.completedDays.includes(d.day);
+  const complete = already || stepIsComplete(stepName, d);
+
+  const mainBtn = isLast
+    ? `<button class="btn ${already ? "btn-secondary" : "btn-primary"} btn-block" data-action="finish-day" data-day="${d.day}" ${complete ? "" : "disabled"}>${already ? "Retourner à l'accueil" : "🏁 Terminer le jour"}</button>`
+    : `<button class="btn btn-primary btn-block" data-action="next-step" ${complete ? "" : "disabled"}>Suivant →</button>`;
+
+  return `
+    <div class="lesson-nav">
+      ${isFirst ? "" : `<button class="btn btn-secondary" data-action="prev-step">← Précédent</button>`}
+      ${mainBtn}
+    </div>
+    ${!complete ? `
+      <p class="small muted step-hint">${stepHint(stepName, d)}</p>
+      <button class="skip-link" data-action="skip-step">Un souci technique avec le micro ? Continuer quand même →</button>
+    ` : ""}`;
+}
+
 function renderLesson() {
   const d = getDay(ui.lessonDay);
   const steps = stepsFor(d);
   if (ui.step >= steps.length) ui.step = steps.length - 1;
+  if (!ui.stepProgress) ui.stepProgress = freshProgress();
   const stepName = steps[ui.step];
   window.__textMap = buildTextMap(d);
 
@@ -549,10 +690,6 @@ function renderLesson() {
   else if (stepName === "challenge") body = renderStepChallenge(d);
   else if (stepName === "summary") body = renderStepSummary(d);
 
-  const isLast = ui.step === steps.length - 1;
-  const isFirst = ui.step === 0;
-  const already = STATE.completedDays.includes(d.day);
-
   return `
   <div class="screen">
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
@@ -563,14 +700,16 @@ function renderLesson() {
     </div>
     <h2 style="margin-top:8px;">${d.icon} ${d.title}</h2>
     <div class="stepper">${segs}</div>
-    ${body}
-    <div class="lesson-nav">
-      ${isFirst ? "" : `<button class="btn btn-secondary" data-action="prev-step">← Précédent</button>`}
-      ${isLast
-        ? `<button class="btn ${already ? "btn-secondary" : "btn-primary"} btn-block" data-action="finish-day" data-day="${d.day}">${already ? "Retourner à l'accueil" : "🏁 Terminer le jour"}</button>`
-        : `<button class="btn btn-primary btn-block" data-action="next-step">Suivant →</button>`}
-    </div>
+    <div class="step-body">${body}</div>
+    <div id="lesson-nav-zone">${buildLessonNavHTML(d, steps)}</div>
   </div>`;
+}
+
+function refreshLessonNav() {
+  const d = getDay(ui.lessonDay);
+  const steps = stepsFor(d);
+  const zone = document.getElementById("lesson-nav-zone");
+  if (zone) zone.innerHTML = buildLessonNavHTML(d, steps);
 }
 
 function renderStepReview(d) {
@@ -719,7 +858,9 @@ function handleMicMatch(ref, feedbackId) {
       let cls = "low", msg = "Réessaie — écoute encore une fois puis répète lentement.";
       if (score >= 0.75) { cls = "good"; msg = "Excellente prononciation ! 🎉"; }
       else if (score >= 0.45) { cls = "mid"; msg = "Bien, presque parfait — encore un essai ?"; }
-      fb.innerHTML = `<div class="feedback ${cls}">${msg}<span class="transcript">Entendu : « ${transcript || "…"} »</span></div>`;
+      fb.innerHTML = `<div class="feedback ${cls}">${msg}
+        <span class="wd-line">${wordDiffHTML(target, transcript)}</span>
+        <span class="transcript">Entendu : « ${transcript || "…"} »</span></div>`;
     },
     (err) => {
       setFeedbackListening(btn, false);
@@ -741,7 +882,9 @@ function handleMicOpen(ref, feedbackId) {
     (transcript) => {
       setFeedbackListening(btn, false);
       const words = transcript.split(/\s+/).filter(Boolean).length;
-      fb.innerHTML = `« ${transcript || "…"} »<br><span class="muted" style="font-style:normal;">${words} mot(s) reconnu(s).</span>`;
+      const reaction = REACTIONS[Math.floor(Math.random() * REACTIONS.length)];
+      fb.innerHTML = `« ${transcript || "…"} »<br><span class="muted" style="font-style:normal;">${words} mot(s) reconnu(s).</span>`
+        + (transcript ? `<div class="reaction-bubble">💬 ${reaction}</div>` : "");
     },
     (err) => {
       setFeedbackListening(btn, false);
@@ -770,7 +913,7 @@ function handleMicChallenge(ref, feedbackId, dayObj) {
       });
       fb.innerHTML = `« ${transcript || "…"} »<br><span class="muted" style="font-style:normal;">${words} mot(s) au total`
         + (usedWords.length ? ` · mots du jour utilisés : ${usedWords.map(v => v.fr).join(", ")} 🎉` : "")
-        + `</span>`;
+        + `</span>` + (transcript ? `<div class="reaction-bubble">🎉 Défi enregistré, bravo pour l'effort !</div>` : "");
     },
     (err) => {
       setFeedbackListening(btn, false);
@@ -778,6 +921,15 @@ function handleMicChallenge(ref, feedbackId, dayObj) {
     },
     { continuous: true }
   );
+}
+
+function markStepProgress(ref) {
+  if (!ui.stepProgress) return;
+  if (ref === "tt") ui.stepProgress.warmup = true;
+  else if (ref === "challenge") ui.stepProgress.challenge = true;
+  else if (ref.startsWith("voc-")) ui.stepProgress.vocab.add(Number(ref.split("-")[1]));
+  else if (ref.startsWith("conv-")) ui.stepProgress.conversation.add(Number(ref.split("-")[1]));
+  else if (ref.startsWith("rev-")) ui.stepProgress.review.add(Number(ref.split("-")[1]));
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -789,14 +941,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const action = el.dataset.action;
 
     if (action === "nav") { ui.view = el.dataset.view; render(); }
-    else if (action === "start") { ui.view = "lesson"; ui.lessonDay = Number(el.dataset.day); ui.step = 0; ui.reviewWords = null; render(); }
+    else if (action === "start") {
+      ui.view = "lesson"; ui.lessonDay = Number(el.dataset.day); ui.step = 0;
+      ui.reviewWords = null; ui.stepProgress = freshProgress(); render();
+    }
     else if (action === "prev-step") { ui.step = Math.max(0, ui.step - 1); window.speechSynthesis && window.speechSynthesis.cancel(); render(); }
     else if (action === "next-step") { ui.step += 1; window.speechSynthesis && window.speechSynthesis.cancel(); render(); }
+    else if (action === "skip-step") {
+      const d = getDay(ui.lessonDay);
+      const steps = stepsFor(d);
+      const stepName = steps[ui.step];
+      if (stepName === "warmup") ui.stepProgress.warmup = true;
+      else if (stepName === "vocab") d.vocab.forEach((v, i) => ui.stepProgress.vocab.add(i));
+      else if (stepName === "listening") ui.stepProgress.listening = true;
+      else if (stepName === "conversation") d.conversation.forEach((q, i) => ui.stepProgress.conversation.add(i));
+      else if (stepName === "challenge") ui.stepProgress.challenge = true;
+      else if (stepName === "review") { if (ui.reviewWords) ui.reviewWords.words.forEach((w, i) => ui.stepProgress.review.add(i)); }
+      if (ui.step === steps.length - 1) markDayComplete(d.day);
+      else { ui.step += 1; window.speechSynthesis && window.speechSynthesis.cancel(); render(); }
+    }
     else if (action === "finish-day") { markDayComplete(Number(el.dataset.day)); }
     else if (action === "play") { speak(window.__textMap[el.dataset.ref]); }
-    else if (action === "mic-match") { handleMicMatch(el.dataset.ref, el.dataset.feedback); }
-    else if (action === "mic-open") { handleMicOpen(el.dataset.ref, el.dataset.feedback); }
-    else if (action === "mic-challenge") { handleMicChallenge(el.dataset.ref, el.dataset.feedback, getDay(ui.lessonDay)); }
+    else if (action === "mic-match") { markStepProgress(el.dataset.ref); refreshLessonNav(); handleMicMatch(el.dataset.ref, el.dataset.feedback); }
+    else if (action === "mic-open") { markStepProgress(el.dataset.ref); refreshLessonNav(); handleMicOpen(el.dataset.ref, el.dataset.feedback); }
+    else if (action === "mic-challenge") { markStepProgress(el.dataset.ref); refreshLessonNav(); handleMicChallenge(el.dataset.ref, el.dataset.feedback, getDay(ui.lessonDay)); }
     else if (action === "quiz") {
       const box = document.getElementById("quiz-box");
       const idx = Number(el.dataset.idx), answer = Number(el.dataset.answer);
@@ -805,6 +973,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (i === answer) opt.classList.add("correct");
         else if (i === idx) opt.classList.add("wrong");
       });
+      if (ui.stepProgress) ui.stepProgress.listening = true;
+      refreshLessonNav();
+    }
+    else if (action === "cal-mode") { ui.calendarMode = el.dataset.mode; render(); }
+    else if (action === "goto-map-location") {
+      ui.celebrationQueue = [];
+      document.getElementById("toast-layer").innerHTML = "";
+      ui.view = "calendar"; ui.calendarMode = "map"; ui.flyToLocationId = el.dataset.locid;
+      render();
     }
     else if (action === "test-voice") { speak("Bonjour ! Voici un exemple de voix française pour ton entraînement."); }
     else if (action === "reset") {
@@ -838,9 +1015,16 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.getElementById("toast-layer").addEventListener("click", (e) => {
-    if (e.target.dataset.action === "close-celebration") {
+    const el = e.target.closest("[data-action]");
+    if (!el) return;
+    if (el.dataset.action === "close-celebration") {
       showNextCelebration();
       if (!ui.celebrationQueue.length) render();
+    } else if (el.dataset.action === "goto-map-location") {
+      ui.celebrationQueue = [];
+      document.getElementById("toast-layer").innerHTML = "";
+      ui.view = "calendar"; ui.calendarMode = "map"; ui.flyToLocationId = el.dataset.locid;
+      render();
     }
   });
 
