@@ -1,17 +1,55 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>
-    <radialGradient id="bg" cx="35%" cy="30%" r="80%">
-      <stop offset="0%" stop-color="#2a2440"/>
-      <stop offset="100%" stop-color="#15121f"/>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d3a24d" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#15121f" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#e8c987"/>
-      <stop offset="100%" stop-color="#d3a24d"/>
-    </linearGradient>
+    
+    <clipPath id="ribbon-clip">
+      <polygon points="232,410 280,410 280,490 256,470 232,490" />
+    </clipPath>
   </defs>
-  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
-  <circle cx="64" cy="64" r="46" fill="none" stroke="url(#gold)" stroke-width="4"/>
-  <circle cx="64" cy="64" r="37" fill="none" stroke="url(#gold)" stroke-width="1.5" opacity="0.6"/>
-  <text x="64" y="80" font-family="Georgia, 'Times New Roman', serif" font-size="54" font-weight="600"
-        text-anchor="middle" fill="url(#gold)">R</text>
+
+  <rect width="512" height="512" rx="120" fill="#15121f" />
+  <rect width="512" height="512" rx="120" fill="none" stroke="#2a2440" stroke-width="16" />
+
+  <circle cx="256" cy="256" r="220" fill="url(#glow)" />
+
+  <g fill="none" stroke="#d3a24d" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="256" y1="80" x2="256" y2="120" />
+    
+    <line x1="240" y1="120" x2="272" y2="120" />
+    
+    <path d="M 244 120 L 230 200 M 268 120 L 282 200" />
+    
+    <path d="M 240 140 L 272 180 M 272 140 L 240 180" stroke-width="10"/>
+    
+    <line x1="216" y1="200" x2="296" y2="200" stroke-width="24"/>
+    
+    <path d="M 222 200 L 202 330 M 290 200 L 310 330" />
+    
+    <path d="M 206 330 C 230 270 282 270 306 330" />
+  </g>
+
+  <g fill="none" stroke="#f4efe4" stroke-width="24" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 256 410 C 200 380 120 390 88 410 L 88 310 C 120 290 200 280 256 310 C 312 280 392 290 424 310 L 424 410 C 392 390 312 380 256 410 Z" />
+    
+    <line x1="256" y1="310" x2="256" y2="410" />
+    
+    <path d="M 140 335 C 180 320 220 325 256 345" stroke-width="12" stroke="#c9c3b8" />
+    <path d="M 140 370 C 180 355 220 360 256 380" stroke-width="12" stroke="#c9c3b8" />
+    
+    <path d="M 372 335 C 332 320 292 325 256 345" stroke-width="12" stroke="#c9c3b8" />
+    <path d="M 372 370 C 332 355 292 360 256 380" stroke-width="12" stroke="#c9c3b8" />
+  </g>
+
+  <g clip-path="url(#ribbon-clip)">
+    <rect x="232" y="408" width="16" height="85" fill="#0055A4" />
+    <rect x="248" y="408" width="16" height="85" fill="#FFFFFF" />
+    <rect x="264" y="408" width="16" height="85" fill="#EF4135" />
+  </g>
+  
+  <path d="M 110 160 Q 120 160 120 150 Q 120 160 130 160 Q 120 160 120 170 Q 120 160 110 160 Z" fill="#c1543c" />
+  <path d="M 390 120 Q 405 120 405 105 Q 405 120 420 120 Q 405 120 405 135 Q 405 120 390 120 Z" fill="#d3a24d" />
+  <path d="M 350 250 Q 358 250 358 242 Q 358 250 366 250 Q 358 250 358 258 Q 358 250 350 250 Z" fill="#f4efe4" opacity="0.6"/>
 </svg>
