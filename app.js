@@ -46,6 +46,8 @@ const ui = {
   reviewWords: null, // cache des mots de révision pour le jour de lesson en cours
   calendarMode: "map", // "map" | "grid"
   flyToLocationId: null,
+  flyToDay: null,
+  justUnlockedIds: null,
   stepProgress: null
 };
 
@@ -148,6 +150,38 @@ function wordDiff(target, said) {
 function wordDiffHTML(target, said) {
   if (!said) return "";
   return wordDiff(target, said).map(d => `<span class="${d.ok ? "wd-ok" : "wd-miss"}">${d.word}</span>`).join(" ");
+}
+
+/* Diff caractère par caractère : pour zoomer sur LE mot posant problème */
+function charDiff(target, said) {
+  const a = target.toLowerCase().split("");
+  const b = said.toLowerCase().split("");
+  const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  let i = a.length, j = b.length;
+  const matched = new Set();
+  while (i > 0 && j > 0) {
+    if (a[i - 1] === b[j - 1]) { matched.add(i - 1); i--; j--; }
+    else if (dp[i - 1][j] >= dp[i][j - 1]) i--; else j--;
+  }
+  return a.map((ch, idx) => ({ ch, ok: matched.has(idx) }));
+}
+
+function charDiffHTML(target, said) {
+  return charDiff(target, said).map(d => `<span class="${d.ok ? "cd-ok" : "cd-miss"}">${d.ch}</span>`).join("");
+}
+
+function bestMatchWord(target, transcriptWords) {
+  let best = "", bestScore = -1;
+  transcriptWords.forEach(w => {
+    const s = similarity(w, target);
+    if (s > bestScore) { bestScore = s; best = w; }
+  });
+  return best;
 }
 
 /* ---------------- Synthèse vocale (écoute en français) ---------------- */
@@ -254,13 +288,13 @@ function markDayComplete(day) {
   }
 
   const newBadges = checkBadges();
-  const unlockedLoc = typeof locationForDay === "function" ? locationForDay(day) : null;
+  const unlockedLocs = typeof locationsForDay === "function" ? locationsForDay(day) : [];
 
   ui.celebrationQueue = [];
   if (!already) {
     ui.celebrationQueue.push({ type: "day", day, xpGain });
     if (newConcept) ui.celebrationQueue.push({ type: "concept", concept: newConcept });
-    if (unlockedLoc) ui.celebrationQueue.push({ type: "location", loc: unlockedLoc });
+    if (unlockedLocs.length) ui.celebrationQueue.push({ type: "location", day, locs: unlockedLocs });
   }
   newBadges.forEach(b => ui.celebrationQueue.push({ type: "badge", badge: b }));
 
@@ -306,13 +340,20 @@ function showNextCelebration() {
         <button class="btn btn-primary btn-block" data-action="close-celebration">Voir</button>
       </div>`;
   } else if (item.type === "location") {
+    const rows = item.locs.map(l => `
+      <div class="loc-reveal-row">
+        <span class="loc-reveal-icon">${l.kind === "core" ? "📖" : "🔭"}</span>
+        <div>
+          <strong>${l.name}</strong>
+          <span class="muted small" style="display:block;">${l.region} · ${l.era}</span>
+        </div>
+      </div>`).join("");
     html = `
       <div class="celebrate">
         <span class="big-emoji">🗺️</span>
-        <h3>Un lieu de Paris dévoilé !</h3>
-        <p style="font-family:var(--font-display); color:var(--gold-soft); font-size:18px; margin-bottom:2px;">${item.loc.name}</p>
-        <p class="muted small">${item.loc.arrondissement} arrondissement</p>
-        <button class="btn btn-primary btn-block" data-action="goto-map-location" data-locid="${item.loc.id}">🗺️ Voir sur la carte</button>
+        <h3>${item.locs.length > 1 ? "2 lieux de France dévoilés !" : "Un lieu de France dévoilé !"}</h3>
+        <div class="loc-reveal-list">${rows}</div>
+        <button class="btn btn-primary btn-block" data-action="goto-map-day" data-day="${item.day}">🗺️ Voir sur la carte</button>
         <button class="btn btn-secondary btn-block" style="margin-top:8px;" data-action="close-celebration">Plus tard</button>
       </div>`;
   } else if (item.type === "badge") {
@@ -432,7 +473,7 @@ function renderHome() {
     </div>
     <div class="mini-card" data-action="nav" data-view="calendar" style="cursor:pointer;">
       <div class="ico">🗺️</div>
-      <div class="txt"><strong>${getUnlockedLocationIds().size} / ${PARIS_LOCATIONS.length} lieux de Paris dévoilés</strong><span>Une carte littéraire à explorer au fil du parcours</span></div>
+      <div class="txt"><strong>${getUnlockedLocationIds().size} / ${PARIS_LOCATIONS.length} lieux de France dévoilés</strong><span>Une carte littéraire à explorer, de Paris à la Provence</span></div>
     </div>
     <div class="mini-card">
       <div class="ico">🔥</div>
@@ -450,7 +491,7 @@ function renderCalendar() {
     <h1>Ton parcours</h1>
     <p class="muted small">Un nouveau jour se débloque automatiquement chaque jour. Tu peux revenir sur n'importe quel jour déjà déverrouillé pour réviser.</p>
     <div class="seg-toggle">
-      <button class="seg-btn ${ui.calendarMode === "map" ? "active" : ""}" data-action="cal-mode" data-mode="map">🗺️ Carte de Paris</button>
+      <button class="seg-btn ${ui.calendarMode === "map" ? "active" : ""}" data-action="cal-mode" data-mode="map">🗺️ Carte de France</button>
       <button class="seg-btn ${ui.calendarMode === "grid" ? "active" : ""}" data-action="cal-mode" data-mode="grid">📅 Grille</button>
     </div>
     ${ui.calendarMode === "map" ? renderMapMode() : renderGridMode()}
@@ -465,8 +506,12 @@ function renderMapMode() {
       <canvas id="fog-canvas"></canvas>
       <div id="map-toast" class="map-toast hidden"></div>
     </div>
-    <p class="small muted" style="margin-top:10px;">
-      🔓 ${unlockedCount} / ${PARIS_LOCATIONS.length} lieux révélés. Termine un jour « Romantisme » pour en découvrir un nouveau, photo et petite histoire à l'appui.
+    <div class="map-legend">
+      <span>📖 Lieu du jour (Romantisme)</span>
+      <span>🔭 Prolongement (mouvements suivants)</span>
+    </div>
+    <p class="small muted" style="margin-top:6px;">
+      🔓 ${unlockedCount} / ${PARIS_LOCATIONS.length} lieux révélés à travers la France. Termine un jour « Romantisme » pour en découvrir deux nouveaux (un auteur romantique + un lieu qui prolonge son thème plus tard dans l'histoire littéraire), photo et anecdote à l'appui.
       Fond de carte © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.
     </p>`;
 }
@@ -610,6 +655,12 @@ function buildTextMap(dayObj) {
   return map;
 }
 
+function buildNoteMap(dayObj) {
+  const map = { tt: dayObj.tongueTwister.tip };
+  dayObj.vocab.forEach((v, i) => map["voc-" + i] = v.note);
+  return map;
+}
+
 function shuffle(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -676,6 +727,7 @@ function renderLesson() {
   if (!ui.stepProgress) ui.stepProgress = freshProgress();
   const stepName = steps[ui.step];
   window.__textMap = buildTextMap(d);
+  window.__noteMap = buildNoteMap(d);
 
   const segs = steps.map((s, i) =>
     `<div class="seg ${i < ui.step ? "filled" : i === ui.step ? "current" : ""}"></div>`
@@ -731,7 +783,7 @@ function renderStepReview(d) {
       </div>
       <div id="fb-rev-${i}"></div>
     </div>`).join("");
-  ui.reviewWords.words.forEach((v, i) => { window.__textMap["rev-" + i] = v.fr; });
+  ui.reviewWords.words.forEach((v, i) => { window.__textMap["rev-" + i] = v.fr; window.__noteMap["rev-" + i] = v.note; });
 
   return `
   <div class="card tint-gold">
@@ -843,6 +895,7 @@ function setFeedbackListening(el, isListening) {
 
 function handleMicMatch(ref, feedbackId) {
   const target = window.__textMap[ref];
+  const note = window.__noteMap ? window.__noteMap[ref] : null;
   const btn = document.querySelector(`[data-ref="${ref}"][data-action="mic-match"]`);
   const fb = document.getElementById(feedbackId);
   if (!recognitionSupported()) {
@@ -855,11 +908,31 @@ function handleMicMatch(ref, feedbackId) {
     (transcript) => {
       setFeedbackListening(btn, false);
       const score = similarity(transcript, target);
+      const saidWords = normalize(transcript).split(" ").filter(Boolean);
+
       let cls = "low", msg = "Réessaie — écoute encore une fois puis répète lentement.";
       if (score >= 0.75) { cls = "good"; msg = "Excellente prononciation ! 🎉"; }
       else if (score >= 0.45) { cls = "mid"; msg = "Bien, presque parfait — encore un essai ?"; }
+
+      let extra = "";
+      if (score < 0.75 && saidWords.length) {
+        const diffs = wordDiff(target, transcript);
+        const worst = diffs.find(d => !d.ok);
+        if (worst) {
+          const closest = bestMatchWord(worst.word, saidWords);
+          if (closest && closest !== worst.word) {
+            extra += `<div class="pinpoint">🔍 Le son à retravailler : <span class="cd-line">${charDiffHTML(worst.word, closest)}</span>
+              <span class="muted">— j'ai entendu « ${closest} »</span></div>`;
+          }
+        }
+      }
+      if (note && score < 0.75) {
+        extra += `<div class="tip-callout">💡 ${note}</div>`;
+      }
+
       fb.innerHTML = `<div class="feedback ${cls}">${msg}
         <span class="wd-line">${wordDiffHTML(target, transcript)}</span>
+        ${extra}
         <span class="transcript">Entendu : « ${transcript || "…"} »</span></div>`;
     },
     (err) => {
@@ -983,6 +1056,14 @@ document.addEventListener("DOMContentLoaded", () => {
       ui.view = "calendar"; ui.calendarMode = "map"; ui.flyToLocationId = el.dataset.locid;
       render();
     }
+    else if (action === "goto-map-day") {
+      const day = Number(el.dataset.day);
+      ui.justUnlockedIds = new Set(locationsForDay(day).map(l => l.id));
+      ui.celebrationQueue = [];
+      document.getElementById("toast-layer").innerHTML = "";
+      ui.view = "calendar"; ui.calendarMode = "map"; ui.flyToDay = day;
+      render();
+    }
     else if (action === "test-voice") { speak("Bonjour ! Voici un exemple de voix française pour ton entraînement."); }
     else if (action === "reset") {
       if (confirm("Réinitialiser toute ta progression ? Cette action est définitive.")) {
@@ -1024,6 +1105,13 @@ document.addEventListener("DOMContentLoaded", () => {
       ui.celebrationQueue = [];
       document.getElementById("toast-layer").innerHTML = "";
       ui.view = "calendar"; ui.calendarMode = "map"; ui.flyToLocationId = el.dataset.locid;
+      render();
+    } else if (el.dataset.action === "goto-map-day") {
+      const day = Number(el.dataset.day);
+      ui.justUnlockedIds = new Set(locationsForDay(day).map(l => l.id));
+      ui.celebrationQueue = [];
+      document.getElementById("toast-layer").innerHTML = "";
+      ui.view = "calendar"; ui.calendarMode = "map"; ui.flyToDay = day;
       render();
     }
   });
